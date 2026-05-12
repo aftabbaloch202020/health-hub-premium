@@ -10,7 +10,7 @@ import p8 from "@/assets/p8.jpg";
 export const BRAND = {
   name: "MediCare Plus",
   tagline: "Health, Delivered with Care",
-  phone: "+1 800 MED-CARE",
+  phone: "+92 321 9009251",
   currency: "$",
 };
 
