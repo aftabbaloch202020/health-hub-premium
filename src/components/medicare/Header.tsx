@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { BRAND, categories, products } from "@/data/products";
 import { useCart, useWishlist } from "@/lib/cart";
@@ -8,6 +8,9 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
   const { ids } = useWishlist();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [voiceLang, setVoiceLang] = useState<"en-US" | "ur-PK">("en-US");
+  const recogRef = useRef<any>(null);
   const [dark, setDark] = useState(() => {
     if (typeof window === "undefined") return false;
     const saved = localStorage.getItem("theme");
@@ -21,6 +24,33 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const startVoice = () => {
+    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) {
+      alert("Voice search isn't supported in this browser. Try Chrome or Edge.");
+      return;
+    }
+    if (listening) {
+      recogRef.current?.stop();
+      return;
+    }
+    const rec = new SR();
+    rec.lang = voiceLang;
+    rec.interimResults = true;
+    rec.continuous = false;
+    rec.maxAlternatives = 1;
+    rec.onstart = () => setListening(true);
+    rec.onerror = () => setListening(false);
+    rec.onend = () => setListening(false);
+    rec.onresult = (e: any) => {
+      let text = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) text += e.results[i][0].transcript;
+      setQ(text);
+    };
+    recogRef.current = rec;
+    try { rec.start(); } catch { /* already started */ }
+  };
 
   useEffect(() => {
     const root = document.documentElement;
@@ -70,8 +100,33 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
               placeholder="Search medicines, vitamins, brands…"
               className="flex-1 bg-transparent px-4 py-2 outline-none text-sm"
             />
-            <button className="w-10 h-10 rounded-full bg-secondary text-secondary-foreground grid place-items-center" aria-label="Voice search">
-              <i className="fa-solid fa-microphone" />
+            <select
+              value={voiceLang}
+              onChange={e => setVoiceLang(e.target.value as any)}
+              className="bg-transparent text-xs outline-none px-2 hidden lg:block"
+              aria-label="Voice language"
+            >
+              <option value="en-US">EN</option>
+              <option value="ur-PK">اردو</option>
+            </select>
+            <button
+              type="button"
+              onClick={startVoice}
+              aria-label={listening ? "Stop voice search" : "Start voice search"}
+              aria-pressed={listening}
+              className={`relative w-10 h-10 rounded-full grid place-items-center transition-smooth ${
+                listening
+                  ? "bg-destructive text-destructive-foreground shadow-glow"
+                  : "bg-secondary text-secondary-foreground hover:scale-105"
+              }`}
+            >
+              {listening && (
+                <>
+                  <span className="absolute inset-0 rounded-full bg-destructive/40 animate-ping" />
+                  <span className="absolute inset-[-6px] rounded-full border-2 border-destructive/40 animate-pulse" />
+                </>
+              )}
+              <i className={`fa-solid ${listening ? "fa-waveform-lines" : "fa-microphone"} relative z-10`} />
             </button>
             <button className="ml-1 px-5 h-10 rounded-full bg-gradient-cta text-primary-foreground font-medium text-sm">
               <i className="fa-solid fa-magnifying-glass mr-2" />Search
