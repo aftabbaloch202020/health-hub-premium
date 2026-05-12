@@ -38,7 +38,7 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
       {/* Topbar */}
       <div className="hidden md:block bg-gradient-cta text-primary-foreground text-xs">
         <div className="container mx-auto px-4 py-2 flex justify-between">
-          <span><i className="fa-solid fa-truck-fast mr-2" />Free delivery on orders over $30</span>
+          <span><i className="fa-solid fa-truck-fast mr-2" />Free delivery on orders over 3000</span>
           <div className="flex gap-5">
             <span><i className="fa-solid fa-headset mr-2" />{BRAND.phone}</span>
             <span><i className="fa-solid fa-location-dot mr-2" />Deliver to: New York 10001</span>
