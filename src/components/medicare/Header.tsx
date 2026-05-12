@@ -8,7 +8,12 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
   const { ids } = useWishlist();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
-  const [dark, setDark] = useState(false);
+  const [dark, setDark] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const saved = localStorage.getItem("theme");
+    if (saved) return saved === "dark";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  });
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -18,7 +23,10 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
   }, []);
 
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", dark);
+    const root = document.documentElement;
+    root.classList.toggle("dark", dark);
+    root.style.colorScheme = dark ? "dark" : "light";
+    localStorage.setItem("theme", dark ? "dark" : "light");
   }, [dark]);
 
   const suggestions = q.length > 1
