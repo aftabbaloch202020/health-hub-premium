@@ -1,10 +1,9 @@
 import { useEffect, useRef } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Pagination, Navigation, EffectFade } from "swiper/modules";
+import { Autoplay, Pagination, EffectFade } from "swiper/modules";
 import gsap from "gsap";
 import "swiper/css";
 import "swiper/css/pagination";
-import "swiper/css/navigation";
 import "swiper/css/effect-fade";
 import h1 from "@/assets/hero-1.jpg";
 import h2 from "@/assets/hero-2.jpg";
@@ -28,11 +27,10 @@ export default function Hero() {
     <section ref={ref} className="relative bg-gradient-hero overflow-hidden">
       <div className="container mx-auto px-4 py-6 md:py-10">
         <Swiper
-          modules={[Autoplay, Pagination, Navigation, EffectFade]}
+          modules={[Autoplay, Pagination, EffectFade]}
           effect="fade"
           autoplay={{ delay: 5500, disableOnInteraction: false }}
           pagination={{ clickable: true }}
-          navigation
           loop
           className="rounded-3xl overflow-hidden shadow-elegant"
         >
