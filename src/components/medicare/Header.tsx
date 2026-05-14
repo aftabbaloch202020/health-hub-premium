@@ -79,7 +79,7 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
 
       <div className="container mx-auto px-4 py-3 flex items-center gap-4">
         <Link to="/" className="flex items-center gap-2 shrink-0">
-          <img src={logo} alt={BRAND.name} className="h-12 w-auto object-contain" />
+          <img src={logo} alt={BRAND.name} className="h-16 md:h-20 w-auto object-contain" />
         </Link>
 
         {/* Search */}
