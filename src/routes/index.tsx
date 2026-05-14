@@ -16,9 +16,9 @@ import CartDrawer from "@/components/medicare/CartDrawer";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "MediCare Plus — Online Pharmacy & Wellness Store" },
+      { title: "Darman STORE — Online Pharmacy & Wellness Store" },
       { name: "description", content: "Order genuine medicines, vitamins and health essentials online. Free 30-minute delivery, 24/7 pharmacist support and verified products." },
-      { property: "og:title", content: "MediCare Plus — Online Pharmacy & Wellness Store" },
+      { property: "og:title", content: "Darman STORE — Online Pharmacy & Wellness Store" },
       { property: "og:description", content: "Genuine medicines, vitamins and wellness — delivered in 30 minutes." },
     ],
   }),
