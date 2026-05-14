@@ -71,6 +71,8 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
     : [];
 
   return (
+    <>
+    <LoginModal open={authOpen} onClose={() => setAuthOpen(false)} onAuth={setUser} />
     <header className={`sticky top-0 z-50 transition-smooth ${scrolled ? "glass shadow-soft" : "bg-background"}`}>
       {/* Topbar */}
       <div className="hidden md:block bg-gradient-cta text-primary-foreground text-xs">
@@ -235,5 +237,6 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
         </div>
       )}
     </header>
+    </>
   );
 }
