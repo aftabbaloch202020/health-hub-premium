@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { BRAND, categories, products } from "@/data/products";
 import { useCart, useWishlist } from "@/lib/cart";
+import LoginModal, { getStoredUser } from "./LoginModal";
 export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
   const { count } = useCart();
   const { ids } = useWishlist();
@@ -17,6 +18,13 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
     return window.matchMedia("(prefers-color-scheme: dark)").matches;
   });
   const [scrolled, setScrolled] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const [userMenu, setUserMenu] = useState(false);
+
+  useEffect(() => {
+    setUser(getStoredUser());
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -63,6 +71,8 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
     : [];
 
   return (
+    <>
+    <LoginModal open={authOpen} onClose={() => setAuthOpen(false)} onAuth={setUser} />
     <header className={`sticky top-0 z-50 transition-smooth ${scrolled ? "glass shadow-soft" : "bg-background"}`}>
       {/* Topbar */}
       <div className="hidden md:block bg-gradient-cta text-primary-foreground text-xs">
@@ -151,9 +161,35 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
           <button onClick={() => setDark(!dark)} className="w-10 h-10 rounded-full hover:bg-muted grid place-items-center" aria-label="Toggle theme">
             <i className={`fa-solid ${dark ? "fa-sun" : "fa-moon"}`} />
           </button>
-          <button className="hidden sm:grid w-10 h-10 rounded-full hover:bg-muted place-items-center" aria-label="Account">
-            <i className="fa-solid fa-user" />
-          </button>
+          <div className="hidden sm:block relative">
+            <button
+              onClick={() => (user ? setUserMenu(v => !v) : setAuthOpen(true))}
+              className="w-10 h-10 rounded-full hover:bg-muted grid place-items-center"
+              aria-label="Account"
+            >
+              {user ? (
+                <span className="w-8 h-8 rounded-full bg-gradient-cta text-primary-foreground text-sm font-bold grid place-items-center">
+                  {user.name.charAt(0).toUpperCase()}
+                </span>
+              ) : (
+                <i className="fa-solid fa-user" />
+              )}
+            </button>
+            {user && userMenu && (
+              <div className="absolute right-0 top-12 w-56 bg-card border border-border rounded-xl shadow-elegant overflow-hidden z-50">
+                <div className="px-4 py-3 border-b border-border">
+                  <div className="text-sm font-semibold truncate">{user.name}</div>
+                  <div className="text-xs text-muted-foreground truncate">{user.email}</div>
+                </div>
+                <button
+                  onClick={() => { localStorage.removeItem("darman_user"); setUser(null); setUserMenu(false); }}
+                  className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted flex items-center gap-2"
+                >
+                  <i className="fa-solid fa-arrow-right-from-bracket" />Sign out
+                </button>
+              </div>
+            )}
+          </div>
           <button className="relative w-10 h-10 rounded-full hover:bg-muted grid place-items-center" aria-label="Wishlist">
             <i className="fa-solid fa-heart" />
             {ids.length > 0 && <span className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-[10px] grid place-items-center font-bold">{ids.length}</span>}
@@ -201,5 +237,6 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
         </div>
       )}
     </header>
+    </>
   );
 }
