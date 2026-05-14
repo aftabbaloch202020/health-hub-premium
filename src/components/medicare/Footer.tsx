@@ -1,12 +1,14 @@
 import { BRAND } from "@/data/products";
-import logo from "@/assets/logo.jpg";
 export default function Footer() {
   return (
     <footer className="bg-foreground text-background mt-16">
       <div className="container mx-auto px-4 py-14 grid grid-cols-2 md:grid-cols-5 gap-8">
         <div className="col-span-2">
-          <div className="flex items-center gap-2 mb-4 bg-background rounded-xl p-3 w-fit">
-            <img src={logo} alt={BRAND.name} className="h-20 w-auto object-contain" />
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-11 h-11 rounded-xl bg-gradient-cta grid place-items-center">
+              <i className="fa-solid fa-prescription-bottle-medical text-primary-foreground text-xl" />
+            </div>
+            <span className="font-bold text-xl">{BRAND.name}</span>
           </div>
           <p className="text-sm opacity-70 max-w-sm">{BRAND.tagline}. Your trusted online pharmacy serving 2M+ customers with care, speed and authenticity.</p>
           <div className="flex gap-3 mt-5">

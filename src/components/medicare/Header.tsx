@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { BRAND, categories, products } from "@/data/products";
 import { useCart, useWishlist } from "@/lib/cart";
-import logo from "@/assets/logo.jpg";
-
 export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
   const { count } = useCart();
   const { ids } = useWishlist();
@@ -79,7 +77,13 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
 
       <div className="container mx-auto px-4 py-3 flex items-center gap-4">
         <Link to="/" className="flex items-center gap-2 shrink-0">
-          <img src={logo} alt={BRAND.name} className="h-16 md:h-20 w-auto object-contain" />
+          <div className="w-11 h-11 rounded-xl bg-gradient-cta grid place-items-center shadow-glow">
+            <i className="fa-solid fa-prescription-bottle-medical text-primary-foreground text-xl" />
+          </div>
+          <div className="leading-tight">
+            <div className="font-bold text-lg">{BRAND.name}</div>
+            <div className="text-[10px] text-muted-foreground -mt-0.5">{BRAND.tagline}</div>
+          </div>
         </Link>
 
         {/* Search */}
