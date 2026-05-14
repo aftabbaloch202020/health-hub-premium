@@ -43,9 +43,21 @@ export default function Footer() {
       <div className="border-t border-background/10">
         <div className="container mx-auto px-4 py-5 flex flex-col md:flex-row gap-3 justify-between text-xs opacity-70">
           <div>© 2026 {BRAND.name}. Licensed online pharmacy. All rights reserved.</div>
-          <div className="flex gap-3">
-            {["cc-visa", "cc-mastercard", "cc-amex", "cc-paypal", "cc-stripe", "cc-apple-pay"].map(b => (
-              <i key={b} className={`fa-brands fa-${b} text-2xl`} />
+          <div className="flex flex-wrap gap-2">
+            {[
+              { label: "VISA", className: "bg-[#1a1f71] text-white" },
+              { label: "PayPak", className: "bg-[#0a7c3a] text-white" },
+              { label: "Debit", className: "bg-[#005baa] text-white" },
+              { label: "Easypaisa", className: "bg-[#00b14f] text-white" },
+              { label: "JazzCash", className: "bg-[#ee2e24] text-white" },
+              { label: "Raast", className: "bg-[#1f3864] text-white" },
+            ].map(p => (
+              <span
+                key={p.label}
+                className={`px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide shadow-sm ${p.className}`}
+              >
+                {p.label}
+              </span>
             ))}
           </div>
         </div>
