@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 
 const KEY = "darman_user";
 
@@ -27,10 +26,11 @@ export default function LoginModal({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!open) {
-      setName(""); setEmail(""); setPassword(""); setLoading(false); setMode("login");
+      setName(""); setEmail(""); setPassword(""); setLoading(false); setMode("login"); setError("");
     }
   }, [open]);
 
@@ -38,31 +38,28 @@ export default function LoginModal({
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     if (!email || !password || (mode === "signup" && !name)) {
-      toast.error("Please fill in all fields");
-      return;
+      setError("Please fill in all fields"); return;
     }
     if (!/^\S+@\S+\.\S+$/.test(email)) {
-      toast.error("Enter a valid email");
-      return;
+      setError("Enter a valid email"); return;
     }
     if (password.length < 6) {
-      toast.error("Password must be at least 6 characters");
-      return;
+      setError("Password must be at least 6 characters"); return;
     }
     setLoading(true);
     await new Promise(r => setTimeout(r, 600));
     const user = { name: mode === "signup" ? name : email.split("@")[0], email };
     localStorage.setItem(KEY, JSON.stringify(user));
     onAuth(user);
-    toast.success(mode === "signup" ? "Account created — welcome!" : `Welcome back, ${user.name}!`);
     setLoading(false);
     onClose();
   };
 
   return (
     <div className="fixed inset-0 z-[100] grid place-items-center bg-foreground/50 backdrop-blur-sm p-4 animate-in fade-in" onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} className="w-full max-w-md bg-card rounded-2xl shadow-elegant overflow-hidden border border-border">
+      <div onClick={e => e.stopPropagation()} className="relative w-full max-w-md bg-card rounded-2xl shadow-elegant overflow-hidden border border-border">
         <div className="bg-gradient-cta p-6 text-primary-foreground">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-background/20 grid place-items-center">
@@ -75,6 +72,11 @@ export default function LoginModal({
           </div>
         </div>
         <form onSubmit={submit} className="p-6 space-y-4">
+          {error && (
+            <div className="px-3 py-2 rounded-lg bg-destructive/10 text-destructive text-sm flex items-center gap-2">
+              <i className="fa-solid fa-circle-exclamation" />{error}
+            </div>
+          )}
           {mode === "signup" && (
             <div>
               <label className="text-sm font-medium block mb-1.5">Full name</label>
