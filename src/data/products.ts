@@ -18,7 +18,7 @@ import mOther from "@/assets/m-other.jpg";
 import mVitamin from "@/assets/m-vitamin.jpg";
 
 export const BRAND = {
-  name: "MediCare Plus",
+  name: "Darman STORE",
   tagline: "Health, Delivered with Care",
   phone: "+92 321 9009251",
   currency: "$",
