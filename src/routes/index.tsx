@@ -8,6 +8,9 @@ import ProductGrid from "@/components/medicare/ProductGrid";
 import Deals from "@/components/medicare/Deals";
 import PrescriptionCTA from "@/components/medicare/PrescriptionCTA";
 import MedicalReportAI from "@/components/medicare/MedicalReportAI";
+import VoiceCallAssistant from "@/components/medicare/VoiceCallAssistant";
+import HealthDashboard from "@/components/medicare/HealthDashboard";
+import SkinAnalysis from "@/components/medicare/SkinAnalysis";
 import Testimonials from "@/components/medicare/Testimonials";
 import FAQ from "@/components/medicare/FAQ";
 import Newsletter from "@/components/medicare/Newsletter";
@@ -39,6 +42,9 @@ function Index() {
         <ProductGrid />
         <PrescriptionCTA />
         <MedicalReportAI />
+        <SkinAnalysis />
+        <VoiceCallAssistant />
+        <HealthDashboard />
         <Testimonials />
         <FAQ />
         <Newsletter />
