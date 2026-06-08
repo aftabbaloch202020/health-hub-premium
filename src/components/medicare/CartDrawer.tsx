@@ -1,10 +1,13 @@
+import { useState } from "react";
 import { useCart } from "@/lib/cart";
+import CheckoutModal from "./CheckoutModal";
 
 export default function CartDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { items, update, remove, subtotal, count, clear } = useCart();
   const delivery = subtotal > 30 || subtotal === 0 ? 0 : 4.99;
   const tax = +(subtotal * 0.05).toFixed(2);
   const total = +(subtotal + delivery + tax).toFixed(2);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   return (
     <>
@@ -54,13 +57,15 @@ export default function CartDrawer({ open, onClose }: { open: boolean; onClose: 
               <div className="flex justify-between"><span className="text-muted-foreground">Tax (5%)</span><span className="font-semibold">${tax}</span></div>
               <div className="flex justify-between pt-2 border-t text-base"><span className="font-bold">Total</span><span className="font-extrabold text-primary text-lg">${total}</span></div>
             </div>
-            <button className="w-full py-3.5 rounded-full bg-gradient-cta text-primary-foreground font-semibold shadow-glow">
+            <button onClick={() => { onClose(); setCheckoutOpen(true); }}
+              className="w-full py-3.5 rounded-full bg-gradient-cta text-primary-foreground font-semibold shadow-glow">
               Checkout <i className="fa-solid fa-arrow-right ml-2" />
             </button>
             <button onClick={clear} className="w-full text-xs text-muted-foreground hover:text-destructive">Clear cart</button>
           </div>
         )}
       </aside>
+      <CheckoutModal open={checkoutOpen} onClose={() => setCheckoutOpen(false)} />
     </>
   );
 }
