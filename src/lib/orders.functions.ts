@@ -76,7 +76,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     // Best-effort email notification (won't fail the order if email is not yet configured)
     try {
       const { sendOrderEmail } = await import("./orders.server");
-      await sendOrderEmail(row);
+      await sendOrderEmail(row as any);
     } catch (e) {
       console.warn("[orders] email send skipped:", (e as Error).message);
     }
