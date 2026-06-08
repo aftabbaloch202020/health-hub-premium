@@ -93,7 +93,7 @@ function AdminPage() {
     navigate({ to: "/auth" });
   };
 
-  const orders: Order[] = (q.data?.orders ?? []) as Order[];
+  const orders: Order[] = (q.data?.orders ?? []) as unknown as Order[];
 
   const filtered = useMemo(() => {
     let l = orders;
