@@ -11,6 +11,7 @@ import MedicalReportAI from "@/components/medicare/MedicalReportAI";
 import VoiceCallAssistant from "@/components/medicare/VoiceCallAssistant";
 import HealthDashboard from "@/components/medicare/HealthDashboard";
 import SkinAnalysis from "@/components/medicare/SkinAnalysis";
+import MedicineReminder from "@/components/medicare/MedicineReminder";
 import Testimonials from "@/components/medicare/Testimonials";
 import FAQ from "@/components/medicare/FAQ";
 import Newsletter from "@/components/medicare/Newsletter";
@@ -45,6 +46,7 @@ function Index() {
         <SkinAnalysis />
         <VoiceCallAssistant />
         <HealthDashboard />
+        <MedicineReminder />
         <Testimonials />
         <FAQ />
         <Newsletter />
