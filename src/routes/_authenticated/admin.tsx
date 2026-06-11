@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { listOrders, updateOrderStatus, claimFirstAdmin } from "@/lib/orders.functions";
+import { listOrders, updateOrderStatus, claimFirstAdmin, listUsers } from "@/lib/orders.functions";
+import { listContactMessages, updateContactStatus } from "@/lib/contact.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPKR } from "@/lib/medicines";
 import { toast } from "sonner";
@@ -25,16 +26,17 @@ type Order = {
   subtotal_pkr: number;
   delivery_pkr: number;
   total_pkr: number;
-  status: "pending" | "confirmed" | "dispatched" | "delivered" | "cancelled";
+  status: "pending" | "processing" | "confirmed" | "dispatched" | "delivered" | "cancelled";
   created_at: string;
 };
 
-const STATUSES: Order["status"][] = ["pending", "confirmed", "dispatched", "delivered", "cancelled"];
+const STATUSES: Order["status"][] = ["pending", "processing", "confirmed", "dispatched", "delivered", "cancelled"];
 
 const STATUS_COLORS: Record<Order["status"], string> = {
   pending: "bg-warning/15 text-warning",
+  processing: "bg-blue-500/15 text-blue-600",
   confirmed: "bg-primary/15 text-primary",
-  dispatched: "bg-blue-500/15 text-blue-600",
+  dispatched: "bg-indigo-500/15 text-indigo-600",
   delivered: "bg-green-500/15 text-green-600",
   cancelled: "bg-destructive/15 text-destructive",
 };
@@ -45,11 +47,15 @@ function AdminPage() {
   const list = useServerFn(listOrders);
   const update = useServerFn(updateOrderStatus);
   const claim = useServerFn(claimFirstAdmin);
+  const usersFn = useServerFn(listUsers);
+  const msgsFn = useServerFn(listContactMessages);
+  const updateMsg = useServerFn(updateContactStatus);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | Order["status"]>("all");
   const [active, setActive] = useState<Order | null>(null);
   const [needsClaim, setNeedsClaim] = useState(false);
+  const [tab, setTab] = useState<"orders" | "users" | "messages">("orders");
 
   const q = useQuery({
     queryKey: ["admin-orders"],
@@ -62,6 +68,22 @@ function AdminPage() {
       }
     },
     retry: false,
+  });
+
+  const usersQ = useQuery({
+    queryKey: ["admin-users"],
+    queryFn: () => usersFn(),
+    enabled: tab === "users" && !needsClaim,
+  });
+  const msgsQ = useQuery({
+    queryKey: ["admin-messages"],
+    queryFn: () => msgsFn(),
+    enabled: tab === "messages" && !needsClaim,
+  });
+  const msgMut = useMutation({
+    mutationFn: (v: { id: string; status: "new" | "read" | "replied" }) => updateMsg({ data: v }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-messages"] }); toast.success("Updated"); },
+    onError: (e) => toast.error((e as Error).message),
   });
 
   const mut = useMutation({
