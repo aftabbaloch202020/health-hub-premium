@@ -1,18 +1,34 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart";
-import { placeOrder } from "@/lib/orders.functions";
+import { placeOrder, placeOrderAuthed } from "@/lib/orders.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { formatPKR } from "@/lib/medicines";
+import { supabase } from "@/integrations/supabase/client";
 
 const USD_TO_PKR = 280;
 
 export default function CheckoutModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { items, subtotal, clear } = useCart();
   const place = useServerFn(placeOrder);
+  const placeAuthed = useServerFn(placeOrderAuthed);
   const [step, setStep] = useState<"form" | "review" | "success">("form");
   const [submitting, setSubmitting] = useState(false);
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
+  const [isAuthed, setIsAuthed] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    supabase.auth.getUser().then(({ data }) => {
+      const u = data.user;
+      setIsAuthed(!!u);
+      if (u) setForm((f) => ({
+        ...f,
+        email: f.email || u.email || "",
+        customer_name: f.customer_name || (u.user_metadata?.full_name as string) || "",
+      }));
+    });
+  }, [open]);
 
   const [form, setForm] = useState({
     customer_name: "",
@@ -52,22 +68,23 @@ export default function CheckoutModal({ open, onClose }: { open: boolean; onClos
     if (err) return toast.error(err);
     setSubmitting(true);
     try {
-      const res = await place({
-        data: {
-          ...form,
-          items: items.map((i) => ({
-            id: i.product.id,
-            name: i.product.name,
-            brand: i.product.brand,
-            image: i.product.image,
-            qty: i.qty,
-            pricePKR: Math.round(i.product.price * USD_TO_PKR),
-          })),
-          subtotal_pkr: subtotalPKR,
-          delivery_pkr: deliveryPKR,
-          total_pkr: totalPKR,
-        },
-      });
+      const payload = {
+        ...form,
+        items: items.map((i) => ({
+          id: i.product.id,
+          name: i.product.name,
+          brand: i.product.brand,
+          image: i.product.image,
+          qty: i.qty,
+          pricePKR: Math.round(i.product.price * USD_TO_PKR),
+        })),
+        subtotal_pkr: subtotalPKR,
+        delivery_pkr: deliveryPKR,
+        total_pkr: totalPKR,
+      };
+      const res = isAuthed
+        ? await placeAuthed({ data: payload })
+        : await place({ data: payload });
       setOrderNumber(res.order_number);
       setStep("success");
       clear();

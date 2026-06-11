@@ -15,6 +15,7 @@ import MedicineReminder from "@/components/medicare/MedicineReminder";
 import Testimonials from "@/components/medicare/Testimonials";
 import FAQ from "@/components/medicare/FAQ";
 import Newsletter from "@/components/medicare/Newsletter";
+import Contact from "@/components/medicare/Contact";
 import Footer from "@/components/medicare/Footer";
 import CartDrawer from "@/components/medicare/CartDrawer";
 
@@ -49,6 +50,7 @@ function Index() {
         <MedicineReminder />
         <Testimonials />
         <FAQ />
+        <Contact />
         <Newsletter />
       </main>
       <Footer />
