@@ -162,6 +162,16 @@ function AdminPage() {
           </div>
         ) : (
           <>
+            <div className="flex gap-2 mb-5 border-b">
+              {(["orders","users","messages"] as const).map((t) => (
+                <button key={t} onClick={() => setTab(t)}
+                  className={`px-4 py-2.5 text-sm font-semibold capitalize border-b-2 transition ${tab === t ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+                  <i className={`fa-solid ${t === "orders" ? "fa-bag-shopping" : t === "users" ? "fa-users" : "fa-envelope"} mr-2`} />{t}
+                </button>
+              ))}
+            </div>
+
+            {tab === "orders" && (<>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5">
               <div>
                 <h1 className="text-2xl md:text-3xl font-extrabold">Orders</h1>
@@ -231,6 +241,56 @@ function AdminPage() {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            )}
+            </>)}
+
+            {tab === "users" && (
+              <div className="bg-card rounded-3xl shadow-card overflow-hidden">
+                <div className="p-5 border-b"><h2 className="text-xl font-extrabold">Registered users ({(usersQ.data?.users ?? []).length})</h2></div>
+                {usersQ.isLoading ? <div className="text-center py-16"><i className="fa-solid fa-spinner animate-spin text-2xl text-primary" /></div> : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted/60 text-xs uppercase font-bold">
+                        <tr><th className="px-4 py-3 text-left">Name</th><th className="px-4 py-3 text-left">Email</th><th className="px-4 py-3 text-left">Phone</th><th className="px-4 py-3 text-left">Joined</th></tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {(usersQ.data?.users ?? []).map((u: any) => (
+                          <tr key={u.id} className="hover:bg-muted/30">
+                            <td className="px-4 py-3 font-semibold">{u.full_name || "—"}</td>
+                            <td className="px-4 py-3">{u.email}</td>
+                            <td className="px-4 py-3">{u.phone || "—"}</td>
+                            <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(u.created_at).toLocaleString()}</td>
+                          </tr>
+                        ))}
+                        {(usersQ.data?.users ?? []).length === 0 && <tr><td colSpan={4} className="text-center py-10 text-muted-foreground">No users yet.</td></tr>}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {tab === "messages" && (
+              <div className="space-y-3">
+                {msgsQ.isLoading ? <div className="text-center py-16"><i className="fa-solid fa-spinner animate-spin text-2xl text-primary" /></div> :
+                  (msgsQ.data?.messages ?? []).length === 0 ? <div className="text-center py-20 bg-card rounded-3xl text-muted-foreground">No messages yet.</div> :
+                  (msgsQ.data?.messages ?? []).map((m: any) => (
+                    <div key={m.id} className="bg-card rounded-2xl shadow-card p-5">
+                      <div className="flex flex-wrap items-center gap-3 mb-2">
+                        <div className="font-semibold">{m.name}</div>
+                        <a href={`mailto:${m.email}`} className="text-sm text-primary">{m.email}</a>
+                        {m.phone && <span className="text-sm text-muted-foreground">{m.phone}</span>}
+                        <select value={m.status} onChange={(e) => msgMut.mutate({ id: m.id, status: e.target.value as any })}
+                          className="ml-auto px-3 py-1 rounded-full text-xs font-bold bg-muted capitalize">
+                          <option value="new">new</option><option value="read">read</option><option value="replied">replied</option>
+                        </select>
+                      </div>
+                      {m.subject && <div className="text-sm font-semibold mb-1">{m.subject}</div>}
+                      <div className="text-sm whitespace-pre-wrap text-muted-foreground">{m.message}</div>
+                      <div className="text-xs text-muted-foreground mt-2">{new Date(m.created_at).toLocaleString()}</div>
+                    </div>
+                  ))}
               </div>
             )}
           </>
