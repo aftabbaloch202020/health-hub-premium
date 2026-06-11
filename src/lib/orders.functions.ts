@@ -177,7 +177,7 @@ export const listOrders = createServerFn({ method: "GET" })
 
 export const updateOrderStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id: string; status: "pending" | "confirmed" | "dispatched" | "delivered" | "cancelled" }) => d)
+  .inputValidator((d: { id: string; status: "pending" | "processing" | "confirmed" | "dispatched" | "delivered" | "cancelled" }) => d)
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
     const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
