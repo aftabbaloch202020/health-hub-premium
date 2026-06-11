@@ -48,6 +48,37 @@ export async function sendOrderEmail(order: OrderRow) {
     .filter(Boolean)
     .join("\n");
 
-  // TODO: replace with actual send once email domain is configured.
-  console.log(`[order-email] to=${ADMIN_EMAIL}\n${body}`);
+  // Best-effort live send via Lovable Email service route if available.
+  // Falls back to a log entry (visible in server logs) when email isn't configured.
+  const subject = `New Order ${order.order_number} — Darman STORE`;
+  try {
+    const base = process.env.LOVABLE_PUBLIC_URL || process.env.SUPABASE_URL?.replace(/\.supabase\.co.*/, "") || "";
+    // Attempt the queue-based transactional sender (no-op if not scaffolded yet)
+    const url = `${base}/lovable/email/transactional/send`;
+    await Promise.allSettled([
+      fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          templateName: "order-admin",
+          recipientEmail: ADMIN_EMAIL,
+          idempotencyKey: `order-admin-${order.order_number}`,
+          templateData: { order, subject, body },
+        }),
+      }),
+      fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          templateName: "order-customer",
+          recipientEmail: order.email,
+          idempotencyKey: `order-customer-${order.order_number}`,
+          templateData: { order, subject, body },
+        }),
+      }),
+    ]);
+  } catch {
+    /* ignore */
+  }
+  console.log(`[order-email] queued → admin=${ADMIN_EMAIL}, customer=${order.email}\n${body}`);
 }

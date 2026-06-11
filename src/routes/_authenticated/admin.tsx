@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { listOrders, updateOrderStatus, claimFirstAdmin } from "@/lib/orders.functions";
+import { listOrders, updateOrderStatus, claimFirstAdmin, listUsers } from "@/lib/orders.functions";
+import { listContactMessages, updateContactStatus } from "@/lib/contact.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPKR } from "@/lib/medicines";
 import { toast } from "sonner";
@@ -25,16 +26,17 @@ type Order = {
   subtotal_pkr: number;
   delivery_pkr: number;
   total_pkr: number;
-  status: "pending" | "confirmed" | "dispatched" | "delivered" | "cancelled";
+  status: "pending" | "processing" | "confirmed" | "dispatched" | "delivered" | "cancelled";
   created_at: string;
 };
 
-const STATUSES: Order["status"][] = ["pending", "confirmed", "dispatched", "delivered", "cancelled"];
+const STATUSES: Order["status"][] = ["pending", "processing", "confirmed", "dispatched", "delivered", "cancelled"];
 
 const STATUS_COLORS: Record<Order["status"], string> = {
   pending: "bg-warning/15 text-warning",
+  processing: "bg-blue-500/15 text-blue-600",
   confirmed: "bg-primary/15 text-primary",
-  dispatched: "bg-blue-500/15 text-blue-600",
+  dispatched: "bg-indigo-500/15 text-indigo-600",
   delivered: "bg-green-500/15 text-green-600",
   cancelled: "bg-destructive/15 text-destructive",
 };
@@ -45,11 +47,15 @@ function AdminPage() {
   const list = useServerFn(listOrders);
   const update = useServerFn(updateOrderStatus);
   const claim = useServerFn(claimFirstAdmin);
+  const usersFn = useServerFn(listUsers);
+  const msgsFn = useServerFn(listContactMessages);
+  const updateMsg = useServerFn(updateContactStatus);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | Order["status"]>("all");
   const [active, setActive] = useState<Order | null>(null);
   const [needsClaim, setNeedsClaim] = useState(false);
+  const [tab, setTab] = useState<"orders" | "users" | "messages">("orders");
 
   const q = useQuery({
     queryKey: ["admin-orders"],
@@ -62,6 +68,22 @@ function AdminPage() {
       }
     },
     retry: false,
+  });
+
+  const usersQ = useQuery({
+    queryKey: ["admin-users"],
+    queryFn: () => usersFn(),
+    enabled: tab === "users" && !needsClaim,
+  });
+  const msgsQ = useQuery({
+    queryKey: ["admin-messages"],
+    queryFn: () => msgsFn(),
+    enabled: tab === "messages" && !needsClaim,
+  });
+  const msgMut = useMutation({
+    mutationFn: (v: { id: string; status: "new" | "read" | "replied" }) => updateMsg({ data: v }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-messages"] }); toast.success("Updated"); },
+    onError: (e) => toast.error((e as Error).message),
   });
 
   const mut = useMutation({
@@ -140,6 +162,16 @@ function AdminPage() {
           </div>
         ) : (
           <>
+            <div className="flex gap-2 mb-5 border-b">
+              {(["orders","users","messages"] as const).map((t) => (
+                <button key={t} onClick={() => setTab(t)}
+                  className={`px-4 py-2.5 text-sm font-semibold capitalize border-b-2 transition ${tab === t ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+                  <i className={`fa-solid ${t === "orders" ? "fa-bag-shopping" : t === "users" ? "fa-users" : "fa-envelope"} mr-2`} />{t}
+                </button>
+              ))}
+            </div>
+
+            {tab === "orders" && (<>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5">
               <div>
                 <h1 className="text-2xl md:text-3xl font-extrabold">Orders</h1>
@@ -209,6 +241,56 @@ function AdminPage() {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            )}
+            </>)}
+
+            {tab === "users" && (
+              <div className="bg-card rounded-3xl shadow-card overflow-hidden">
+                <div className="p-5 border-b"><h2 className="text-xl font-extrabold">Registered users ({(usersQ.data?.users ?? []).length})</h2></div>
+                {usersQ.isLoading ? <div className="text-center py-16"><i className="fa-solid fa-spinner animate-spin text-2xl text-primary" /></div> : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted/60 text-xs uppercase font-bold">
+                        <tr><th className="px-4 py-3 text-left">Name</th><th className="px-4 py-3 text-left">Email</th><th className="px-4 py-3 text-left">Phone</th><th className="px-4 py-3 text-left">Joined</th></tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {(usersQ.data?.users ?? []).map((u: any) => (
+                          <tr key={u.id} className="hover:bg-muted/30">
+                            <td className="px-4 py-3 font-semibold">{u.full_name || "—"}</td>
+                            <td className="px-4 py-3">{u.email}</td>
+                            <td className="px-4 py-3">{u.phone || "—"}</td>
+                            <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(u.created_at).toLocaleString()}</td>
+                          </tr>
+                        ))}
+                        {(usersQ.data?.users ?? []).length === 0 && <tr><td colSpan={4} className="text-center py-10 text-muted-foreground">No users yet.</td></tr>}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {tab === "messages" && (
+              <div className="space-y-3">
+                {msgsQ.isLoading ? <div className="text-center py-16"><i className="fa-solid fa-spinner animate-spin text-2xl text-primary" /></div> :
+                  (msgsQ.data?.messages ?? []).length === 0 ? <div className="text-center py-20 bg-card rounded-3xl text-muted-foreground">No messages yet.</div> :
+                  (msgsQ.data?.messages ?? []).map((m: any) => (
+                    <div key={m.id} className="bg-card rounded-2xl shadow-card p-5">
+                      <div className="flex flex-wrap items-center gap-3 mb-2">
+                        <div className="font-semibold">{m.name}</div>
+                        <a href={`mailto:${m.email}`} className="text-sm text-primary">{m.email}</a>
+                        {m.phone && <span className="text-sm text-muted-foreground">{m.phone}</span>}
+                        <select value={m.status} onChange={(e) => msgMut.mutate({ id: m.id, status: e.target.value as any })}
+                          className="ml-auto px-3 py-1 rounded-full text-xs font-bold bg-muted capitalize">
+                          <option value="new">new</option><option value="read">read</option><option value="replied">replied</option>
+                        </select>
+                      </div>
+                      {m.subject && <div className="text-sm font-semibold mb-1">{m.subject}</div>}
+                      <div className="text-sm whitespace-pre-wrap text-muted-foreground">{m.message}</div>
+                      <div className="text-xs text-muted-foreground mt-2">{new Date(m.created_at).toLocaleString()}</div>
+                    </div>
+                  ))}
               </div>
             )}
           </>

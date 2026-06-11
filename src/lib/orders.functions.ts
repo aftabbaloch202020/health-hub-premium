@@ -84,6 +84,76 @@ export const placeOrder = createServerFn({ method: "POST" })
     return { order_number: row.order_number, id: row.id };
   });
 
+// Authenticated variant — attaches the order to the signed-in user so it
+// appears in their order history.
+export const placeOrderAuthed = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: PlaceOrderInput) => data)
+  .handler(async ({ data, context }) => {
+    const errors = validate(data);
+    if (errors.length) throw new Error(errors.join(", "));
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const order_number = genOrderNumber();
+
+    const { data: row, error } = await supabaseAdmin
+      .from("orders")
+      .insert({
+        order_number,
+        user_id: context.userId,
+        customer_name: data.customer_name.trim(),
+        phone: data.phone.trim(),
+        email: data.email.trim().toLowerCase(),
+        address: data.address.trim(),
+        city: data.city.trim(),
+        notes: data.notes?.trim() || null,
+        items: data.items,
+        subtotal_pkr: data.subtotal_pkr,
+        delivery_pkr: data.delivery_pkr,
+        total_pkr: data.total_pkr,
+      })
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+
+    try {
+      const { sendOrderEmail } = await import("./orders.server");
+      await sendOrderEmail(row as any);
+    } catch (e) {
+      console.warn("[orders] email send skipped:", (e as Error).message);
+    }
+
+    return { order_number: row.order_number, id: row.id };
+  });
+
+// Current user's order history
+export const listMyOrders = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("orders")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return { orders: data ?? [] };
+  });
+
+// Admin: list all users (profiles)
+export const listUsers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: roles } = await context.supabase
+      .from("user_roles").select("role").eq("user_id", context.userId);
+    if (!(roles ?? []).some((r) => r.role === "admin")) throw new Error("Forbidden");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("profiles")
+      .select("id, full_name, email, phone, created_at")
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return { users: data ?? [] };
+  });
+
 export const listOrders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -107,7 +177,7 @@ export const listOrders = createServerFn({ method: "GET" })
 
 export const updateOrderStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id: string; status: "pending" | "confirmed" | "dispatched" | "delivered" | "cancelled" }) => d)
+  .inputValidator((d: { id: string; status: "pending" | "processing" | "confirmed" | "dispatched" | "delivered" | "cancelled" }) => d)
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
     const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);

@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      contact_messages: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+          phone: string | null
+          status: string
+          subject: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          message: string
+          name: string
+          phone?: string | null
+          status?: string
+          subject?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          phone?: string | null
+          status?: string
+          subject?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           address: string
@@ -31,6 +67,7 @@ export type Database = {
           subtotal_pkr: number
           total_pkr: number
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           address: string
@@ -48,6 +85,7 @@ export type Database = {
           subtotal_pkr: number
           total_pkr: number
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           address?: string
@@ -64,6 +102,34 @@ export type Database = {
           status?: Database["public"]["Enums"]["order_status"]
           subtotal_pkr?: number
           total_pkr?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -107,6 +173,7 @@ export type Database = {
       order_status:
         | "pending"
         | "confirmed"
+        | "processing"
         | "dispatched"
         | "delivered"
         | "cancelled"
@@ -241,6 +308,7 @@ export const Constants = {
       order_status: [
         "pending",
         "confirmed",
+        "processing",
         "dispatched",
         "delivered",
         "cancelled",
