@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { listOrders, updateOrderStatus, claimFirstAdmin, listUsers } from "@/lib/orders.functions";
 import { listContactMessages, updateContactStatus } from "@/lib/contact.functions";
+import { listAdminMedicines, upsertMedicine, deleteMedicine, type MedicineRow, type MedicineInput } from "@/lib/medicines.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPKR } from "@/lib/medicines";
 import { toast } from "sonner";
@@ -50,12 +51,16 @@ function AdminPage() {
   const usersFn = useServerFn(listUsers);
   const msgsFn = useServerFn(listContactMessages);
   const updateMsg = useServerFn(updateContactStatus);
+  const medsFn = useServerFn(listAdminMedicines);
+  const medSave = useServerFn(upsertMedicine);
+  const medDel = useServerFn(deleteMedicine);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | Order["status"]>("all");
   const [active, setActive] = useState<Order | null>(null);
   const [needsClaim, setNeedsClaim] = useState(false);
-  const [tab, setTab] = useState<"orders" | "users" | "messages">("orders");
+  const [tab, setTab] = useState<"orders" | "users" | "messages" | "medicines">("orders");
+  const [editMed, setEditMed] = useState<Partial<MedicineRow> | null>(null);
 
   const q = useQuery({
     queryKey: ["admin-orders"],
@@ -83,6 +88,22 @@ function AdminPage() {
   const msgMut = useMutation({
     mutationFn: (v: { id: string; status: "new" | "read" | "replied" }) => updateMsg({ data: v }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-messages"] }); toast.success("Updated"); },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const medsQ = useQuery({
+    queryKey: ["admin-medicines"],
+    queryFn: () => medsFn(),
+    enabled: tab === "medicines" && !needsClaim,
+  });
+  const medSaveMut = useMutation({
+    mutationFn: (v: MedicineInput) => medSave({ data: v }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-medicines"] }); toast.success("Saved"); setEditMed(null); },
+    onError: (e) => toast.error((e as Error).message),
+  });
+  const medDelMut = useMutation({
+    mutationFn: (id: string) => medDel({ data: { id } }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-medicines"] }); toast.success("Deleted"); },
     onError: (e) => toast.error((e as Error).message),
   });
 
@@ -163,10 +184,10 @@ function AdminPage() {
         ) : (
           <>
             <div className="flex gap-2 mb-5 border-b">
-              {(["orders","users","messages"] as const).map((t) => (
+              {(["orders","medicines","users","messages"] as const).map((t) => (
                 <button key={t} onClick={() => setTab(t)}
                   className={`px-4 py-2.5 text-sm font-semibold capitalize border-b-2 transition ${tab === t ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-                  <i className={`fa-solid ${t === "orders" ? "fa-bag-shopping" : t === "users" ? "fa-users" : "fa-envelope"} mr-2`} />{t}
+                  <i className={`fa-solid ${t === "orders" ? "fa-bag-shopping" : t === "medicines" ? "fa-pills" : t === "users" ? "fa-users" : "fa-envelope"} mr-2`} />{t}
                 </button>
               ))}
             </div>
@@ -293,11 +314,54 @@ function AdminPage() {
                   ))}
               </div>
             )}
+
+            {tab === "medicines" && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-extrabold">Medicines ({(medsQ.data?.medicines ?? []).length})</h2>
+                    <p className="text-sm text-muted-foreground">Add, edit, and manage stock</p>
+                  </div>
+                  <button onClick={() => setEditMed({ name: "", brand: "", category: "", price_pkr: 0, stock: 0, is_active: true, prescription_required: false, rating: 4.5 })}
+                    className="px-4 py-2.5 rounded-xl bg-gradient-cta text-primary-foreground font-bold shadow-soft">
+                    <i className="fa-solid fa-plus mr-2" />Add medicine
+                  </button>
+                </div>
+                {medsQ.isLoading ? <div className="text-center py-16"><i className="fa-solid fa-spinner animate-spin text-2xl text-primary" /></div> : (
+                  <div className="bg-card rounded-3xl shadow-card overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted/60 text-xs uppercase font-bold">
+                          <tr><th className="px-4 py-3 text-left">Medicine</th><th className="px-4 py-3 text-left">Category</th><th className="px-4 py-3 text-right">Price</th><th className="px-4 py-3 text-right">Stock</th><th className="px-4 py-3 text-left">Status</th><th className="px-4 py-3"></th></tr>
+                        </thead>
+                        <tbody className="divide-y">
+                          {(medsQ.data?.medicines ?? []).map((m: MedicineRow) => (
+                            <tr key={m.id} className="hover:bg-muted/30">
+                              <td className="px-4 py-3"><div className="flex items-center gap-3">{m.image && <img src={m.image} alt="" className="w-10 h-10 rounded-lg object-contain bg-background" />}<div><div className="font-semibold">{m.name}</div><div className="text-xs text-muted-foreground">{m.brand}</div></div></div></td>
+                              <td className="px-4 py-3">{m.category || "—"}</td>
+                              <td className="px-4 py-3 text-right font-bold text-primary">{formatPKR(m.price_pkr)}</td>
+                              <td className={`px-4 py-3 text-right font-bold ${m.stock === 0 ? "text-destructive" : m.stock < 10 ? "text-warning" : ""}`}>{m.stock}</td>
+                              <td className="px-4 py-3"><span className={`px-2 py-1 rounded-full text-xs font-bold ${m.is_active ? "bg-green-500/15 text-green-600" : "bg-muted text-muted-foreground"}`}>{m.is_active ? "Active" : "Hidden"}</span></td>
+                              <td className="px-4 py-3 text-right space-x-2">
+                                <button onClick={() => setEditMed(m)} className="px-3 py-1.5 rounded-lg bg-muted hover:bg-accent text-xs font-semibold"><i className="fa-solid fa-pen mr-1" />Edit</button>
+                                <button onClick={() => { if (confirm(`Delete ${m.name}?`)) medDelMut.mutate(m.id); }} className="px-3 py-1.5 rounded-lg bg-destructive/10 hover:bg-destructive/20 text-destructive text-xs font-semibold"><i className="fa-solid fa-trash" /></button>
+                              </td>
+                            </tr>
+                          ))}
+                          {(medsQ.data?.medicines ?? []).length === 0 && <tr><td colSpan={6} className="text-center py-10 text-muted-foreground">No medicines yet. Click "Add medicine" to create one.</td></tr>}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </main>
 
       {active && <OrderModal o={active} onClose={() => setActive(null)} />}
+      {editMed && <MedicineModal initial={editMed} onClose={() => setEditMed(null)} onSave={(v) => medSaveMut.mutate(v)} saving={medSaveMut.isPending} />}
     </div>
   );
 }
