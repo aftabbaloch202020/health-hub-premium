@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { listOrders, updateOrderStatus, claimFirstAdmin, listUsers } from "@/lib/orders.functions";
 import { listContactMessages, updateContactStatus } from "@/lib/contact.functions";
+import { listAdminMedicines, upsertMedicine, deleteMedicine, type MedicineRow, type MedicineInput } from "@/lib/medicines.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPKR } from "@/lib/medicines";
 import { toast } from "sonner";
@@ -50,12 +51,16 @@ function AdminPage() {
   const usersFn = useServerFn(listUsers);
   const msgsFn = useServerFn(listContactMessages);
   const updateMsg = useServerFn(updateContactStatus);
+  const medsFn = useServerFn(listAdminMedicines);
+  const medSave = useServerFn(upsertMedicine);
+  const medDel = useServerFn(deleteMedicine);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | Order["status"]>("all");
   const [active, setActive] = useState<Order | null>(null);
   const [needsClaim, setNeedsClaim] = useState(false);
-  const [tab, setTab] = useState<"orders" | "users" | "messages">("orders");
+  const [tab, setTab] = useState<"orders" | "users" | "messages" | "medicines">("orders");
+  const [editMed, setEditMed] = useState<Partial<MedicineRow> | null>(null);
 
   const q = useQuery({
     queryKey: ["admin-orders"],
@@ -83,6 +88,22 @@ function AdminPage() {
   const msgMut = useMutation({
     mutationFn: (v: { id: string; status: "new" | "read" | "replied" }) => updateMsg({ data: v }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-messages"] }); toast.success("Updated"); },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const medsQ = useQuery({
+    queryKey: ["admin-medicines"],
+    queryFn: () => medsFn(),
+    enabled: tab === "medicines" && !needsClaim,
+  });
+  const medSaveMut = useMutation({
+    mutationFn: (v: MedicineInput) => medSave({ data: v }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-medicines"] }); toast.success("Saved"); setEditMed(null); },
+    onError: (e) => toast.error((e as Error).message),
+  });
+  const medDelMut = useMutation({
+    mutationFn: (id: string) => medDel({ data: { id } }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-medicines"] }); toast.success("Deleted"); },
     onError: (e) => toast.error((e as Error).message),
   });
 
@@ -163,10 +184,10 @@ function AdminPage() {
         ) : (
           <>
             <div className="flex gap-2 mb-5 border-b">
-              {(["orders","users","messages"] as const).map((t) => (
+              {(["orders","medicines","users","messages"] as const).map((t) => (
                 <button key={t} onClick={() => setTab(t)}
                   className={`px-4 py-2.5 text-sm font-semibold capitalize border-b-2 transition ${tab === t ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-                  <i className={`fa-solid ${t === "orders" ? "fa-bag-shopping" : t === "users" ? "fa-users" : "fa-envelope"} mr-2`} />{t}
+                  <i className={`fa-solid ${t === "orders" ? "fa-bag-shopping" : t === "medicines" ? "fa-pills" : t === "users" ? "fa-users" : "fa-envelope"} mr-2`} />{t}
                 </button>
               ))}
             </div>
@@ -293,11 +314,54 @@ function AdminPage() {
                   ))}
               </div>
             )}
+
+            {tab === "medicines" && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-extrabold">Medicines ({(medsQ.data?.medicines ?? []).length})</h2>
+                    <p className="text-sm text-muted-foreground">Add, edit, and manage stock</p>
+                  </div>
+                  <button onClick={() => setEditMed({ name: "", brand: "", category: "", price_pkr: 0, stock: 0, is_active: true, prescription_required: false, rating: 4.5 })}
+                    className="px-4 py-2.5 rounded-xl bg-gradient-cta text-primary-foreground font-bold shadow-soft">
+                    <i className="fa-solid fa-plus mr-2" />Add medicine
+                  </button>
+                </div>
+                {medsQ.isLoading ? <div className="text-center py-16"><i className="fa-solid fa-spinner animate-spin text-2xl text-primary" /></div> : (
+                  <div className="bg-card rounded-3xl shadow-card overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted/60 text-xs uppercase font-bold">
+                          <tr><th className="px-4 py-3 text-left">Medicine</th><th className="px-4 py-3 text-left">Category</th><th className="px-4 py-3 text-right">Price</th><th className="px-4 py-3 text-right">Stock</th><th className="px-4 py-3 text-left">Status</th><th className="px-4 py-3"></th></tr>
+                        </thead>
+                        <tbody className="divide-y">
+                          {(medsQ.data?.medicines ?? []).map((m: MedicineRow) => (
+                            <tr key={m.id} className="hover:bg-muted/30">
+                              <td className="px-4 py-3"><div className="flex items-center gap-3">{m.image && <img src={m.image} alt="" className="w-10 h-10 rounded-lg object-contain bg-background" />}<div><div className="font-semibold">{m.name}</div><div className="text-xs text-muted-foreground">{m.brand}</div></div></div></td>
+                              <td className="px-4 py-3">{m.category || "—"}</td>
+                              <td className="px-4 py-3 text-right font-bold text-primary">{formatPKR(m.price_pkr)}</td>
+                              <td className={`px-4 py-3 text-right font-bold ${m.stock === 0 ? "text-destructive" : m.stock < 10 ? "text-warning" : ""}`}>{m.stock}</td>
+                              <td className="px-4 py-3"><span className={`px-2 py-1 rounded-full text-xs font-bold ${m.is_active ? "bg-green-500/15 text-green-600" : "bg-muted text-muted-foreground"}`}>{m.is_active ? "Active" : "Hidden"}</span></td>
+                              <td className="px-4 py-3 text-right space-x-2">
+                                <button onClick={() => setEditMed(m)} className="px-3 py-1.5 rounded-lg bg-muted hover:bg-accent text-xs font-semibold"><i className="fa-solid fa-pen mr-1" />Edit</button>
+                                <button onClick={() => { if (confirm(`Delete ${m.name}?`)) medDelMut.mutate(m.id); }} className="px-3 py-1.5 rounded-lg bg-destructive/10 hover:bg-destructive/20 text-destructive text-xs font-semibold"><i className="fa-solid fa-trash" /></button>
+                              </td>
+                            </tr>
+                          ))}
+                          {(medsQ.data?.medicines ?? []).length === 0 && <tr><td colSpan={6} className="text-center py-10 text-muted-foreground">No medicines yet. Click "Add medicine" to create one.</td></tr>}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </main>
 
       {active && <OrderModal o={active} onClose={() => setActive(null)} />}
+      {editMed && <MedicineModal initial={editMed} onClose={() => setEditMed(null)} onSave={(v) => medSaveMut.mutate(v)} saving={medSaveMut.isPending} />}
     </div>
   );
 }
@@ -370,4 +434,64 @@ function Info({ label, children }: { label: string; children: React.ReactNode })
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return <div className="flex justify-between"><span className="text-muted-foreground">{label}</span><span className="font-semibold">{children}</span></div>;
+}
+
+function MedicineModal({ initial, onClose, onSave, saving }: { initial: Partial<MedicineRow>; onClose: () => void; onSave: (v: MedicineInput) => void; saving: boolean }) {
+  const [v, setV] = useState<Partial<MedicineRow>>(initial);
+  const set = (k: keyof MedicineRow, val: any) => setV((p) => ({ ...p, [k]: val }));
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave({
+      id: v.id,
+      name: v.name ?? "",
+      brand: v.brand ?? "",
+      category: v.category ?? "",
+      price_pkr: Number(v.price_pkr ?? 0),
+      old_price_pkr: v.old_price_pkr != null ? Number(v.old_price_pkr) : null,
+      stock: Number(v.stock ?? 0),
+      image: (v.image ?? "") as string,
+      description: (v.description ?? "") as string,
+      prescription_required: !!v.prescription_required,
+      rating: Number(v.rating ?? 4.5),
+      is_active: v.is_active ?? true,
+    });
+  };
+  return (
+    <div className="fixed inset-0 z-50 bg-foreground/50 backdrop-blur-sm grid place-items-center p-4" onClick={onClose}>
+      <form onSubmit={submit} className="bg-card rounded-3xl shadow-elegant w-full max-w-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="p-5 border-b flex justify-between items-center">
+          <div className="font-bold text-lg">{v.id ? "Edit medicine" : "Add medicine"}</div>
+          <button type="button" onClick={onClose} className="w-9 h-9 rounded-full hover:bg-muted grid place-items-center"><i className="fa-solid fa-xmark" /></button>
+        </div>
+        <div className="p-5 grid grid-cols-2 gap-3 text-sm">
+          <Field label="Name *" full><input required value={v.name ?? ""} onChange={(e) => set("name", e.target.value)} className="w-full h-10 px-3 rounded-lg bg-muted border outline-none" /></Field>
+          <Field label="Brand"><input value={v.brand ?? ""} onChange={(e) => set("brand", e.target.value)} className="w-full h-10 px-3 rounded-lg bg-muted border outline-none" /></Field>
+          <Field label="Category"><input value={v.category ?? ""} onChange={(e) => set("category", e.target.value)} className="w-full h-10 px-3 rounded-lg bg-muted border outline-none" /></Field>
+          <Field label="Price (PKR) *"><input required type="number" min={0} step="0.01" value={v.price_pkr ?? 0} onChange={(e) => set("price_pkr", e.target.value)} className="w-full h-10 px-3 rounded-lg bg-muted border outline-none" /></Field>
+          <Field label="Old price (PKR)"><input type="number" min={0} step="0.01" value={v.old_price_pkr ?? ""} onChange={(e) => set("old_price_pkr", e.target.value === "" ? null : e.target.value)} className="w-full h-10 px-3 rounded-lg bg-muted border outline-none" /></Field>
+          <Field label="Stock"><input type="number" min={0} value={v.stock ?? 0} onChange={(e) => set("stock", e.target.value)} className="w-full h-10 px-3 rounded-lg bg-muted border outline-none" /></Field>
+          <Field label="Rating"><input type="number" min={0} max={5} step="0.1" value={v.rating ?? 4.5} onChange={(e) => set("rating", e.target.value)} className="w-full h-10 px-3 rounded-lg bg-muted border outline-none" /></Field>
+          <Field label="Image URL" full><input value={v.image ?? ""} onChange={(e) => set("image", e.target.value)} placeholder="https://..." className="w-full h-10 px-3 rounded-lg bg-muted border outline-none" /></Field>
+          <Field label="Description" full><textarea rows={3} value={v.description ?? ""} onChange={(e) => set("description", e.target.value)} className="w-full px-3 py-2 rounded-lg bg-muted border outline-none" /></Field>
+          <label className="flex items-center gap-2 col-span-1"><input type="checkbox" checked={!!v.prescription_required} onChange={(e) => set("prescription_required", e.target.checked)} />Prescription required</label>
+          <label className="flex items-center gap-2 col-span-1"><input type="checkbox" checked={v.is_active ?? true} onChange={(e) => set("is_active", e.target.checked)} />Active (visible to customers)</label>
+        </div>
+        <div className="p-5 border-t flex justify-end gap-2">
+          <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl bg-muted font-semibold">Cancel</button>
+          <button type="submit" disabled={saving} className="px-4 py-2.5 rounded-xl bg-gradient-cta text-primary-foreground font-bold shadow-soft disabled:opacity-60">
+            {saving ? <i className="fa-solid fa-spinner animate-spin" /> : <><i className="fa-solid fa-floppy-disk mr-2" />Save</>}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function Field({ label, full, children }: { label: string; full?: boolean; children: React.ReactNode }) {
+  return (
+    <div className={full ? "col-span-2" : ""}>
+      <div className="text-xs text-muted-foreground uppercase font-semibold mb-1">{label}</div>
+      {children}
+    </div>
+  );
 }

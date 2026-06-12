@@ -50,6 +50,57 @@ export type Database = {
         }
         Relationships: []
       }
+      medicines: {
+        Row: {
+          brand: string
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          image: string | null
+          is_active: boolean
+          name: string
+          old_price_pkr: number | null
+          prescription_required: boolean
+          price_pkr: number
+          rating: number
+          stock: number
+          updated_at: string
+        }
+        Insert: {
+          brand?: string
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image?: string | null
+          is_active?: boolean
+          name: string
+          old_price_pkr?: number | null
+          prescription_required?: boolean
+          price_pkr?: number
+          rating?: number
+          stock?: number
+          updated_at?: string
+        }
+        Update: {
+          brand?: string
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image?: string | null
+          is_active?: boolean
+          name?: string
+          old_price_pkr?: number | null
+          prescription_required?: boolean
+          price_pkr?: number
+          rating?: number
+          stock?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           address: string
