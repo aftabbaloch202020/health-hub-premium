@@ -435,3 +435,63 @@ function Info({ label, children }: { label: string; children: React.ReactNode })
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return <div className="flex justify-between"><span className="text-muted-foreground">{label}</span><span className="font-semibold">{children}</span></div>;
 }
+
+function MedicineModal({ initial, onClose, onSave, saving }: { initial: Partial<MedicineRow>; onClose: () => void; onSave: (v: MedicineInput) => void; saving: boolean }) {
+  const [v, setV] = useState<Partial<MedicineRow>>(initial);
+  const set = (k: keyof MedicineRow, val: any) => setV((p) => ({ ...p, [k]: val }));
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave({
+      id: v.id,
+      name: v.name ?? "",
+      brand: v.brand ?? "",
+      category: v.category ?? "",
+      price_pkr: Number(v.price_pkr ?? 0),
+      old_price_pkr: v.old_price_pkr != null ? Number(v.old_price_pkr) : null,
+      stock: Number(v.stock ?? 0),
+      image: (v.image ?? "") as string,
+      description: (v.description ?? "") as string,
+      prescription_required: !!v.prescription_required,
+      rating: Number(v.rating ?? 4.5),
+      is_active: v.is_active ?? true,
+    });
+  };
+  return (
+    <div className="fixed inset-0 z-50 bg-foreground/50 backdrop-blur-sm grid place-items-center p-4" onClick={onClose}>
+      <form onSubmit={submit} className="bg-card rounded-3xl shadow-elegant w-full max-w-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="p-5 border-b flex justify-between items-center">
+          <div className="font-bold text-lg">{v.id ? "Edit medicine" : "Add medicine"}</div>
+          <button type="button" onClick={onClose} className="w-9 h-9 rounded-full hover:bg-muted grid place-items-center"><i className="fa-solid fa-xmark" /></button>
+        </div>
+        <div className="p-5 grid grid-cols-2 gap-3 text-sm">
+          <Field label="Name *" full><input required value={v.name ?? ""} onChange={(e) => set("name", e.target.value)} className="w-full h-10 px-3 rounded-lg bg-muted border outline-none" /></Field>
+          <Field label="Brand"><input value={v.brand ?? ""} onChange={(e) => set("brand", e.target.value)} className="w-full h-10 px-3 rounded-lg bg-muted border outline-none" /></Field>
+          <Field label="Category"><input value={v.category ?? ""} onChange={(e) => set("category", e.target.value)} className="w-full h-10 px-3 rounded-lg bg-muted border outline-none" /></Field>
+          <Field label="Price (PKR) *"><input required type="number" min={0} step="0.01" value={v.price_pkr ?? 0} onChange={(e) => set("price_pkr", e.target.value)} className="w-full h-10 px-3 rounded-lg bg-muted border outline-none" /></Field>
+          <Field label="Old price (PKR)"><input type="number" min={0} step="0.01" value={v.old_price_pkr ?? ""} onChange={(e) => set("old_price_pkr", e.target.value === "" ? null : e.target.value)} className="w-full h-10 px-3 rounded-lg bg-muted border outline-none" /></Field>
+          <Field label="Stock"><input type="number" min={0} value={v.stock ?? 0} onChange={(e) => set("stock", e.target.value)} className="w-full h-10 px-3 rounded-lg bg-muted border outline-none" /></Field>
+          <Field label="Rating"><input type="number" min={0} max={5} step="0.1" value={v.rating ?? 4.5} onChange={(e) => set("rating", e.target.value)} className="w-full h-10 px-3 rounded-lg bg-muted border outline-none" /></Field>
+          <Field label="Image URL" full><input value={v.image ?? ""} onChange={(e) => set("image", e.target.value)} placeholder="https://..." className="w-full h-10 px-3 rounded-lg bg-muted border outline-none" /></Field>
+          <Field label="Description" full><textarea rows={3} value={v.description ?? ""} onChange={(e) => set("description", e.target.value)} className="w-full px-3 py-2 rounded-lg bg-muted border outline-none" /></Field>
+          <label className="flex items-center gap-2 col-span-1"><input type="checkbox" checked={!!v.prescription_required} onChange={(e) => set("prescription_required", e.target.checked)} />Prescription required</label>
+          <label className="flex items-center gap-2 col-span-1"><input type="checkbox" checked={v.is_active ?? true} onChange={(e) => set("is_active", e.target.checked)} />Active (visible to customers)</label>
+        </div>
+        <div className="p-5 border-t flex justify-end gap-2">
+          <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl bg-muted font-semibold">Cancel</button>
+          <button type="submit" disabled={saving} className="px-4 py-2.5 rounded-xl bg-gradient-cta text-primary-foreground font-bold shadow-soft disabled:opacity-60">
+            {saving ? <i className="fa-solid fa-spinner animate-spin" /> : <><i className="fa-solid fa-floppy-disk mr-2" />Save</>}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function Field({ label, full, children }: { label: string; full?: boolean; children: React.ReactNode }) {
+  return (
+    <div className={full ? "col-span-2" : ""}>
+      <div className="text-xs text-muted-foreground uppercase font-semibold mb-1">{label}</div>
+      {children}
+    </div>
+  );
+}
