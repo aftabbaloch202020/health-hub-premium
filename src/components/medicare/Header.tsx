@@ -239,7 +239,7 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
                 <>
                   <span className="w-10 h-10 rounded-full bg-gradient-cta text-primary-foreground text-sm font-bold grid place-items-center shrink-0">
                     {user.name.charAt(0).toUpperCase()}
-                  HN                  </span>
+                  </span>
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-semibold truncate">{user.name}</div>
                     <div className="text-xs text-muted-foreground truncate">{user.email}</div>
