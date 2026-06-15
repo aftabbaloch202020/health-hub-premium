@@ -71,7 +71,7 @@ export default function LoginModal({
             </div>
           </div>
         </div>
-        <form onSubmit={submit} className="p-6 space-y-4">
+        <form onSubmit={submit} className="p-5 sm:p-6 space-y-4">
           {error && (
             <div className="px-3 py-2 rounded-lg bg-destructive/10 text-destructive text-sm flex items-center gap-2">
               <i className="fa-solid fa-circle-exclamation" />{error}
