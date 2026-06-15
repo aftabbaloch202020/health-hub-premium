@@ -234,6 +234,44 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
         <div className="md:hidden border-t border-border bg-card animate-fade-up">
           <div className="p-4 space-y-2">
             <input placeholder="Search…" className="w-full rounded-full px-4 py-3 bg-muted outline-none" />
+            <div className="flex items-center gap-2 pt-2">
+              {user ? (
+                <>
+                  <span className="w-10 h-10 rounded-full bg-gradient-cta text-primary-foreground text-sm font-bold grid place-items-center shrink-0">
+                    {user.name.charAt(0).toUpperCase()}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-semibold truncate">{user.name}</div>
+                    <div className="text-xs text-muted-foreground truncate">{user.email}</div>
+                  </div>
+                </>
+              ) : (
+                <button
+                  onClick={() => { setAuthOpen(true); setOpen(false); }}
+                  className="w-full rounded-xl bg-gradient-cta text-primary-foreground font-medium text-sm px-4 py-3 flex items-center justify-center gap-2"
+                >
+                  <i className="fa-solid fa-right-to-bracket" /> Sign in / Register
+                </button>
+              )}
+            </div>
+            {user && (
+              <div className="grid grid-cols-1 gap-2">
+                <Link to="/orders" onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 p-3 rounded-xl bg-muted text-sm">
+                  <i className="fa-solid fa-bag-shopping text-primary" /> My Orders
+                </Link>
+                <Link to="/auth" onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 p-3 rounded-xl bg-muted text-sm">
+                  <i className="fa-solid fa-user text-primary" /> Account
+                </Link>
+                <button
+                  onClick={() => { localStorage.removeItem("darman_user"); setUser(null); setOpen(false); }}
+                  className="flex items-center gap-2 p-3 rounded-xl bg-muted text-sm text-left"
+                >
+                  <i className="fa-solid fa-arrow-right-from-bracket text-primary" /> Sign out
+                </button>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-2 pt-2">
               {categories.slice(0, 8).map(c => (
                 <a key={c.name} href="#products" className="flex items-center gap-2 p-3 rounded-xl bg-muted text-sm">
