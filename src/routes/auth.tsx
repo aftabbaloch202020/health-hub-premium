@@ -61,16 +61,16 @@ function AuthPage() {
   const title = mode === "signin" ? "Sign in" : mode === "signup" ? "Create account" : "Reset password";
 
   return (
-    <div className="min-h-screen grid place-items-center bg-gradient-to-br from-background to-muted p-4">
-      <div className="w-full max-w-md bg-card rounded-3xl shadow-elegant p-8">
+    <div className="min-h-screen grid place-items-center bg-gradient-to-br from-background to-muted p-3 sm:p-4">
+      <div className="w-full max-w-md bg-card rounded-2xl sm:rounded-3xl shadow-elegant p-5 sm:p-8">
         <Link to="/" className="flex items-center gap-2 mb-6 justify-center">
-          <div className="w-11 h-11 rounded-xl bg-gradient-cta grid place-items-center shadow-glow">
-            <i className="fa-solid fa-prescription-bottle-medical text-primary-foreground text-xl" />
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-cta grid place-items-center shadow-glow">
+            <i className="fa-solid fa-prescription-bottle-medical text-primary-foreground text-lg sm:text-xl" />
           </div>
-          <span className="font-extrabold text-xl">Darman STORE</span>
+          <span className="font-extrabold text-lg sm:text-xl">Darman STORE</span>
         </Link>
-        <h1 className="text-2xl font-extrabold text-center">{title}</h1>
-        <p className="text-sm text-muted-foreground text-center mt-1 mb-6">
+        <h1 className="text-xl sm:text-2xl font-extrabold text-center">{title}</h1>
+        <p className="text-sm text-muted-foreground text-center mt-1 mb-4 sm:mb-6">
           {mode === "forgot" ? "We'll email you a reset link" : "Welcome back to your pharmacy"}
         </p>
 
