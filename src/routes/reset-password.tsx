@@ -43,8 +43,8 @@ function ResetPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen grid place-items-center bg-gradient-to-br from-background to-muted p-4">
-      <div className="w-full max-w-md bg-card rounded-3xl shadow-elegant p-8">
+    <div className="min-h-screen grid place-items-center bg-gradient-to-br from-background to-muted p-3 sm:p-4">
+      <div className="w-full max-w-md bg-card rounded-2xl sm:rounded-3xl shadow-elegant p-5 sm:p-8">
         <Link to="/" className="flex items-center gap-2 mb-6 justify-center">
           <div className="w-11 h-11 rounded-xl bg-gradient-cta grid place-items-center shadow-glow">
             <i className="fa-solid fa-key text-primary-foreground text-xl" />
