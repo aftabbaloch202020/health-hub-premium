@@ -50,6 +50,45 @@ export type Database = {
         }
         Relationships: []
       }
+      external_medicines: {
+        Row: {
+          availability: string
+          created_at: string
+          id: string
+          image_url: string | null
+          last_seen_at: string
+          name: string
+          price_pkr: number | null
+          source: string
+          source_url: string
+          updated_at: string
+        }
+        Insert: {
+          availability?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          last_seen_at?: string
+          name: string
+          price_pkr?: number | null
+          source?: string
+          source_url: string
+          updated_at?: string
+        }
+        Update: {
+          availability?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          last_seen_at?: string
+          name?: string
+          price_pkr?: number | null
+          source?: string
+          source_url?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       medicines: {
         Row: {
           brand: string
@@ -182,6 +221,36 @@ export type Database = {
           id?: string
           phone?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      sync_logs: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          id: string
+          items_synced: number | null
+          source: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          id?: string
+          items_synced?: number | null
+          source: string
+          status: string
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          id?: string
+          items_synced?: number | null
+          source?: string
+          status?: string
         }
         Relationships: []
       }
