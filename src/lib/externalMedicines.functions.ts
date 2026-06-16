@@ -26,11 +26,6 @@ export const listExternalMedicines = createServerFn({ method: "GET" }).handler(
 );
 
 export const triggerSync = createServerFn({ method: "POST" }).handler(async () => {
-  const { getRequestHost } = await import("@tanstack/react-start/server");
-  const host = getRequestHost();
-  const proto = host.includes("localhost") ? "http" : "https";
-  const res = await fetch(`${proto}://${host}/api/public/hooks/sync-medicines`, {
-    method: "POST",
-  });
-  return await res.json();
+  const { runTimemedicoSync } = await import("@/lib/sync-medicines.server");
+  return await runTimemedicoSync();
 });
