@@ -72,14 +72,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "darmanaistore" },
+      { name: "description", content: "Darman AI Store is an advanced AI-powered healthcare shopping platform designed to provide a smarter and easier way to access medicines and healthcare products" },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "darmanaistore" },
+      { property: "og:description", content: "Darman AI Store is an advanced AI-powered healthcare shopping platform designed to provide a smarter and easier way to access medicines and healthcare products" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "darmanaistore" },
+      { name: "twitter:description", content: "Darman AI Store is an advanced AI-powered healthcare shopping platform designed to provide a smarter and easier way to access medicines and healthcare products" },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/7dBcjagPVeemx3J32HBXogocnHa2/social-images/social-1781603768943-darmanaistore.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/7dBcjagPVeemx3J32HBXogocnHa2/social-images/social-1781603768943-darmanaistore.webp" },
     ],
     links: [
       {
