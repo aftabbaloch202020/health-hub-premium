@@ -4,7 +4,7 @@ import Header from "@/components/medicare/Header";
 import Hero from "@/components/medicare/Hero";
 import FeatureBar from "@/components/medicare/FeatureBar";
 import Categories from "@/components/medicare/Categories";
-import ProductGrid from "@/components/medicare/ProductGrid";
+import LiveMedicineGrid from "@/components/medicare/LiveMedicineGrid";
 import Deals from "@/components/medicare/Deals";
 import PrescriptionCTA from "@/components/medicare/PrescriptionCTA";
 import MedicalReportAI from "@/components/medicare/MedicalReportAI";
@@ -41,7 +41,7 @@ function Index() {
         <FeatureBar />
         <Categories />
         <Deals />
-        <ProductGrid />
+        <LiveMedicineGrid />
         <PrescriptionCTA />
         <MedicalReportAI />
         <SkinAnalysis />
