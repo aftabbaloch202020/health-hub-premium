@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { listOrders, updateOrderStatus, claimFirstAdmin, listUsers } from "@/lib/orders.functions";
 import { listContactMessages, updateContactStatus } from "@/lib/contact.functions";
 import { listAdminMedicines, upsertMedicine, deleteMedicine, type MedicineRow, type MedicineInput } from "@/lib/medicines.functions";
+import { adminListPayments, adminGetScreenshotUrl, adminApprovePayment, adminRejectPayment, adminSuspendSubscription, adminUsageStats } from "@/lib/payments.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPKR } from "@/lib/medicines";
 import { toast } from "sonner";
@@ -54,13 +55,20 @@ function AdminPage() {
   const medsFn = useServerFn(listAdminMedicines);
   const medSave = useServerFn(upsertMedicine);
   const medDel = useServerFn(deleteMedicine);
+  const payListFn = useServerFn(adminListPayments);
+  const paySignFn = useServerFn(adminGetScreenshotUrl);
+  const payApproveFn = useServerFn(adminApprovePayment);
+  const payRejectFn = useServerFn(adminRejectPayment);
+  const subSuspendFn = useServerFn(adminSuspendSubscription);
+  const statsFn = useServerFn(adminUsageStats);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | Order["status"]>("all");
   const [active, setActive] = useState<Order | null>(null);
   const [needsClaim, setNeedsClaim] = useState(false);
-  const [tab, setTab] = useState<"orders" | "users" | "messages" | "medicines">("orders");
+  const [tab, setTab] = useState<"orders" | "users" | "messages" | "medicines" | "payments" | "stats">("orders");
   const [editMed, setEditMed] = useState<Partial<MedicineRow> | null>(null);
+  const [payFilter, setPayFilter] = useState<"all" | "pending" | "approved" | "rejected">("pending");
 
   const q = useQuery({
     queryKey: ["admin-orders"],
@@ -106,6 +114,39 @@ function AdminPage() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-medicines"] }); toast.success("Deleted"); },
     onError: (e) => toast.error((e as Error).message),
   });
+
+  const paymentsQ = useQuery({
+    queryKey: ["admin-payments", payFilter],
+    queryFn: () => payListFn({ data: { status: payFilter === "all" ? undefined : payFilter } }),
+    enabled: tab === "payments" && !needsClaim,
+  });
+  const statsQ = useQuery({
+    queryKey: ["admin-stats"],
+    queryFn: () => statsFn(),
+    enabled: tab === "stats" && !needsClaim,
+  });
+  const approveMut = useMutation({
+    mutationFn: (id: string) => payApproveFn({ data: { payment_id: id } }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-payments"] }); toast.success("Approved — subscription activated"); },
+    onError: (e) => toast.error((e as Error).message),
+  });
+  const rejectMut = useMutation({
+    mutationFn: (v: { id: string; reason?: string }) => payRejectFn({ data: { payment_id: v.id, reason: v.reason } }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-payments"] }); toast.success("Rejected"); },
+    onError: (e) => toast.error((e as Error).message),
+  });
+  const suspendMut = useMutation({
+    mutationFn: (uid: string) => subSuspendFn({ data: { user_id: uid } }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-payments"] }); toast.success("Subscription suspended"); },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const viewScreenshot = async (path: string) => {
+    try {
+      const { url } = await paySignFn({ data: { path } });
+      window.open(url, "_blank");
+    } catch (e) { toast.error((e as Error).message); }
+  };
 
   const mut = useMutation({
     mutationFn: (vars: { id: string; status: Order["status"] }) => update({ data: vars }),
@@ -184,10 +225,10 @@ function AdminPage() {
         ) : (
           <>
             <div className="flex gap-2 mb-5 border-b">
-              {(["orders","medicines","users","messages"] as const).map((t) => (
+              {(["orders","medicines","payments","stats","users","messages"] as const).map((t) => (
                 <button key={t} onClick={() => setTab(t)}
                   className={`px-4 py-2.5 text-sm font-semibold capitalize border-b-2 transition ${tab === t ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-                  <i className={`fa-solid ${t === "orders" ? "fa-bag-shopping" : t === "medicines" ? "fa-pills" : t === "users" ? "fa-users" : "fa-envelope"} mr-2`} />{t}
+                  <i className={`fa-solid ${t === "orders" ? "fa-bag-shopping" : t === "medicines" ? "fa-pills" : t === "users" ? "fa-users" : t === "messages" ? "fa-envelope" : t === "payments" ? "fa-money-check-dollar" : "fa-chart-line"} mr-2`} />{t}
                 </button>
               ))}
             </div>
