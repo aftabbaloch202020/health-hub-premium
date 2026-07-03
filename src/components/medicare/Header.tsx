@@ -181,9 +181,17 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
                   <div className="text-sm font-semibold truncate">{user.name}</div>
                   <div className="text-xs text-muted-foreground truncate">{user.email}</div>
                 </div>
+                <Link to="/dashboard" onClick={() => setUserMenu(false)}
+                  className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted flex items-center gap-2">
+                  <i className="fa-solid fa-gauge-high" />My dashboard
+                </Link>
                 <Link to="/orders" onClick={() => setUserMenu(false)}
                   className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted flex items-center gap-2">
                   <i className="fa-solid fa-bag-shopping" />My orders
+                </Link>
+                <Link to="/subscribe" onClick={() => setUserMenu(false)}
+                  className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted flex items-center gap-2">
+                  <i className="fa-solid fa-crown" />Subscription
                 </Link>
                 <Link to="/auth" onClick={() => setUserMenu(false)}
                   className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted flex items-center gap-2">
@@ -223,6 +231,9 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
               {c.name}
             </a>
           ))}
+          <a href="#ai-features" className="px-4 py-3 text-sm font-semibold text-primary whitespace-nowrap">
+            <i className="fa-solid fa-wand-magic-sparkles mr-1" /> AI Features
+          </a>
           <a href="#deals" className="ml-auto px-4 py-3 text-sm font-semibold text-destructive whitespace-nowrap">
             <i className="fa-solid fa-fire mr-1" /> Hot Deals
           </a>
@@ -256,13 +267,17 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
             </div>
             {user && (
               <div className="grid grid-cols-1 gap-2">
+                <Link to="/dashboard" onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 p-3 rounded-xl bg-muted text-sm">
+                  <i className="fa-solid fa-gauge-high text-primary" /> Dashboard
+                </Link>
+                <Link to="/subscribe" onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 p-3 rounded-xl bg-muted text-sm">
+                  <i className="fa-solid fa-crown text-primary" /> Subscription
+                </Link>
                 <Link to="/orders" onClick={() => setOpen(false)}
                   className="flex items-center gap-2 p-3 rounded-xl bg-muted text-sm">
                   <i className="fa-solid fa-bag-shopping text-primary" /> My Orders
-                </Link>
-                <Link to="/auth" onClick={() => setOpen(false)}
-                  className="flex items-center gap-2 p-3 rounded-xl bg-muted text-sm">
-                  <i className="fa-solid fa-user text-primary" /> Account
                 </Link>
                 <button
                   onClick={() => { localStorage.removeItem("darman_user"); setUser(null); setOpen(false); }}
@@ -272,6 +287,10 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
                 </button>
               </div>
             )}
+            <a href="#ai-features" onClick={() => setOpen(false)}
+              className="flex items-center gap-2 p-3 rounded-xl bg-gradient-cta text-primary-foreground text-sm font-semibold">
+              <i className="fa-solid fa-wand-magic-sparkles" /> AI Features
+            </a>
             <div className="grid grid-cols-2 gap-2 pt-2">
               {categories.slice(0, 8).map(c => (
                 <a key={c.name} href="#products" className="flex items-center gap-2 p-3 rounded-xl bg-muted text-sm">
