@@ -15,11 +15,12 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: "/orders" });
+      if (data.user) navigate({ to: "/dashboard" });
     });
   }, [navigate]);
 
@@ -29,10 +30,11 @@ function AuthPage() {
     try {
       if (mode === "signup") {
         if (password.length < 6) throw new Error("Password must be at least 6 characters");
+        if (password !== confirmPassword) throw new Error("Passwords do not match");
         const { error } = await supabase.auth.signUp({
           email, password,
           options: {
-            emailRedirectTo: `${window.location.origin}/orders`,
+            emailRedirectTo: `${window.location.origin}/dashboard`,
             data: { full_name: fullName, phone },
           },
         });
@@ -42,7 +44,7 @@ function AuthPage() {
       } else if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate({ to: "/orders" });
+        navigate({ to: "/dashboard" });
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/reset-password`,
@@ -88,6 +90,10 @@ function AuthPage() {
           {mode !== "forgot" && (
             <input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)}
               placeholder="Password (min 6 chars)" className={inp} />
+          )}
+          {mode === "signup" && (
+            <input type="password" required minLength={6} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Confirm password" className={inp} />
           )}
           <button disabled={loading} className="w-full py-3 rounded-xl bg-gradient-cta text-primary-foreground font-bold shadow-glow disabled:opacity-60">
             {loading ? <i className="fa-solid fa-spinner animate-spin" /> : mode === "signin" ? "Sign In" : mode === "signup" ? "Sign Up" : "Send reset link"}
