@@ -44,10 +44,8 @@ export default function AiGate({ tool, title, children }: { tool: AiTool; title?
 
   // Not logged in
   if (!session) {
-    return <LockedShell title={title ?? TOOL_LABELS[tool]} icon="fa-lock" heading="Sign in required" text="Create a free account to try any AI tool. Every new user gets 1 free use per tool.">
-      <Link to="/auth" className="btn-primary">Sign in / Register</Link>
-      {children}
-    </LockedShell>;
+    return <LockedShell title={title ?? TOOL_LABELS[tool]} icon="fa-lock" heading="Sign in required" text="Create a free account to try any AI tool. Every new user gets 1 free use per tool."
+      cta={<Link to="/auth" className="cta-btn">Sign in / Register</Link>} preview={children} />;
   }
 
   if (isLoading || !access) {
@@ -60,27 +58,23 @@ export default function AiGate({ tool, title, children }: { tool: AiTool; title?
   if (canUse) return <>{children}</>;
 
   if (used && !access.hasActiveSub) {
-    return <LockedShell title={title ?? TOOL_LABELS[tool]} icon="fa-crown" heading="Subscribe to continue" text="You've used your 1 free trial for this tool. Choose a plan to unlock unlimited access.">
-      <Link to="/subscribe" className="btn-primary">View plans</Link>
-      {children}
-    </LockedShell>;
+    return <LockedShell title={title ?? TOOL_LABELS[tool]} icon="fa-crown" heading="Subscribe to continue" text="You've used your 1 free trial for this tool. Choose a plan to unlock unlimited access."
+      cta={<Link to="/subscribe" className="cta-btn">View plans</Link>} preview={children} />;
   }
 
-  return <LockedShell title={title ?? TOOL_LABELS[tool]} icon="fa-gift" heading="You have 1 free use" text="Click below to unlock this tool. Free trial is one use per tool — after that you'll need a subscription.">
-    <button onClick={() => consume.mutate()} disabled={consume.isPending} className="btn-primary">
+  return <LockedShell title={title ?? TOOL_LABELS[tool]} icon="fa-gift" heading="You have 1 free use" text="Click below to unlock this tool. Free trial is one use per tool — after that you'll need a subscription."
+    cta={<button onClick={() => consume.mutate()} disabled={consume.isPending} className="cta-btn">
       {consume.isPending ? <><i className="fa-solid fa-spinner animate-spin mr-2" />Unlocking…</> : <><i className="fa-solid fa-unlock mr-2" />Use my free trial</>}
-    </button>
-    {children}
-  </LockedShell>;
+    </button>} preview={children} />;
 }
 
-function LockedShell({ title, icon, heading, text, children }: { title: string; icon: string; heading: string; text: string; children: React.ReactNode }) {
+function LockedShell({ title, icon, heading, text, cta, preview }: { title: string; icon: string; heading: string; text: string; cta: React.ReactNode; preview: React.ReactNode }) {
   return (
     <section className="container mx-auto px-4 py-10 md:py-14">
       <div className="relative rounded-3xl overflow-hidden border border-border shadow-elegant bg-card">
         <div className="relative">
           <div className="pointer-events-none select-none blur-md opacity-40 max-h-[420px] overflow-hidden">
-            {children}
+            {preview}
           </div>
           <div className="absolute inset-0 bg-background/70 backdrop-blur-sm grid place-items-center">
             <div className="text-center p-6 max-w-md">
@@ -90,8 +84,8 @@ function LockedShell({ title, icon, heading, text, children }: { title: string; 
               <div className="text-xs uppercase tracking-widest text-primary font-bold mb-1">{title}</div>
               <h3 className="text-2xl font-extrabold mb-2">{heading}</h3>
               <p className="text-sm text-muted-foreground mb-5">{text}</p>
-              <div className="flex justify-center gap-2 [&_.btn-primary]:px-6 [&_.btn-primary]:py-3 [&_.btn-primary]:rounded-xl [&_.btn-primary]:bg-gradient-cta [&_.btn-primary]:text-primary-foreground [&_.btn-primary]:font-semibold [&_.btn-primary]:shadow-glow">
-                {/* The button/link passed as children is the first child before the section content */}
+              <div className="flex justify-center gap-2 [&_.cta-btn]:inline-flex [&_.cta-btn]:items-center [&_.cta-btn]:px-6 [&_.cta-btn]:py-3 [&_.cta-btn]:rounded-xl [&_.cta-btn]:bg-gradient-cta [&_.cta-btn]:text-primary-foreground [&_.cta-btn]:font-semibold [&_.cta-btn]:shadow-glow [&_.cta-btn:disabled]:opacity-60">
+                {cta}
               </div>
             </div>
           </div>
