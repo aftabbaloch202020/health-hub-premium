@@ -397,6 +397,78 @@ function AdminPage() {
                 )}
               </div>
             )}
+
+            {tab === "payments" && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <h2 className="text-2xl font-extrabold">Payments ({(paymentsQ.data ?? []).length})</h2>
+                  <div className="flex gap-2">
+                    {(["all","pending","approved","rejected"] as const).map(s => (
+                      <Chip key={s} active={payFilter === s} onClick={() => setPayFilter(s)}>{s}</Chip>
+                    ))}
+                  </div>
+                </div>
+                {paymentsQ.isLoading ? <div className="text-center py-16"><i className="fa-solid fa-spinner animate-spin text-2xl text-primary" /></div> : (
+                  <div className="bg-card rounded-3xl shadow-card overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted/60 text-xs uppercase font-bold">
+                          <tr><th className="px-4 py-3 text-left">User</th><th className="px-4 py-3 text-left">Plan</th><th className="px-4 py-3 text-right">Amount</th><th className="px-4 py-3 text-left">Method</th><th className="px-4 py-3 text-left">Tx ID</th><th className="px-4 py-3 text-left">Status</th><th className="px-4 py-3 text-left">Date</th><th className="px-4 py-3"></th></tr>
+                        </thead>
+                        <tbody className="divide-y">
+                          {(paymentsQ.data ?? []).filter((p: any) => payFilter === "all" || p.status === payFilter).map((p: any) => (
+                            <tr key={p.id} className="hover:bg-muted/30">
+                              <td className="px-4 py-3"><div className="font-semibold">{p.full_name}</div><div className="text-xs text-muted-foreground">{p.email}</div></td>
+                              <td className="px-4 py-3 capitalize">{p.plan}</td>
+                              <td className="px-4 py-3 text-right font-bold text-primary">{formatPKR(p.amount_pkr)}</td>
+                              <td className="px-4 py-3 capitalize">{p.method}</td>
+                              <td className="px-4 py-3 font-mono text-xs">{p.transaction_id || "—"}</td>
+                              <td className="px-4 py-3"><span className={`px-2 py-1 rounded-full text-xs font-bold capitalize ${p.status === "approved" ? "bg-green-500/15 text-green-600" : p.status === "rejected" ? "bg-destructive/15 text-destructive" : "bg-warning/15 text-warning"}`}>{p.status}</span></td>
+                              <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(p.created_at).toLocaleString()}</td>
+                              <td className="px-4 py-3 space-x-1 whitespace-nowrap">
+                                <button onClick={() => viewScreenshot(p.screenshot_url)} className="px-2.5 py-1.5 rounded-lg bg-muted hover:bg-accent text-xs font-semibold"><i className="fa-solid fa-image mr-1" />View</button>
+                                {p.status === "pending" && (<>
+                                  <button onClick={() => approveMut.mutate(p.id)} className="px-2.5 py-1.5 rounded-lg bg-green-500/15 text-green-600 hover:bg-green-500/25 text-xs font-semibold"><i className="fa-solid fa-check mr-1" />Approve</button>
+                                  <button onClick={() => { const r = prompt("Reason?") ?? undefined; rejectMut.mutate({ id: p.id, reason: r }); }} className="px-2.5 py-1.5 rounded-lg bg-destructive/10 hover:bg-destructive/20 text-destructive text-xs font-semibold"><i className="fa-solid fa-xmark mr-1" />Reject</button>
+                                </>)}
+                              </td>
+                            </tr>
+                          ))}
+                          {(paymentsQ.data ?? []).length === 0 && <tr><td colSpan={8} className="text-center py-10 text-muted-foreground">No payments yet.</td></tr>}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {tab === "stats" && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-extrabold">AI usage statistics</h2>
+                {statsQ.isLoading ? <div className="text-center py-16"><i className="fa-solid fa-spinner animate-spin text-2xl text-primary" /></div> : (
+                  <>
+                    <div className="grid md:grid-cols-3 gap-4">
+                      <div className="bg-card rounded-2xl p-5 border"><div className="text-xs text-muted-foreground uppercase font-bold">Total uses</div><div className="text-3xl font-extrabold mt-1">{(statsQ.data?.totalFree ?? 0) + (statsQ.data?.totalPaid ?? 0)}</div></div>
+                      <div className="bg-card rounded-2xl p-5 border"><div className="text-xs text-muted-foreground uppercase font-bold">Free trials</div><div className="text-3xl font-extrabold mt-1">{statsQ.data?.totalFree ?? 0}</div></div>
+                      <div className="bg-card rounded-2xl p-5 border"><div className="text-xs text-muted-foreground uppercase font-bold">Paid uses</div><div className="text-3xl font-extrabold mt-1">{statsQ.data?.totalPaid ?? 0}</div></div>
+                    </div>
+                    <div className="bg-card rounded-2xl p-5 border">
+                      <div className="font-bold mb-3">Usage by tool</div>
+                      <div className="space-y-2">
+                        {Object.entries(statsQ.data?.byTool ?? {}).map(([tool, count]) => (
+                          <div key={tool} className="flex items-center gap-3 text-sm">
+                            <div className="w-32 capitalize font-medium">{tool}</div>
+                            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden"><div className="h-full bg-gradient-cta" style={{ width: `${Math.min(100, (Number(count) / Math.max(1, Math.max(...Object.values(statsQ.data?.byTool ?? { x: 1 }).map(Number)))) * 100)}%` }} /></div>
+                            <div className="w-10 text-right font-bold">{Number(count)}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </>
         )}
       </main>
