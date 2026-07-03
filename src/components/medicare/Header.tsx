@@ -267,13 +267,17 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
             </div>
             {user && (
               <div className="grid grid-cols-1 gap-2">
+                <Link to="/dashboard" onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 p-3 rounded-xl bg-muted text-sm">
+                  <i className="fa-solid fa-gauge-high text-primary" /> Dashboard
+                </Link>
+                <Link to="/subscribe" onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 p-3 rounded-xl bg-muted text-sm">
+                  <i className="fa-solid fa-crown text-primary" /> Subscription
+                </Link>
                 <Link to="/orders" onClick={() => setOpen(false)}
                   className="flex items-center gap-2 p-3 rounded-xl bg-muted text-sm">
                   <i className="fa-solid fa-bag-shopping text-primary" /> My Orders
-                </Link>
-                <Link to="/auth" onClick={() => setOpen(false)}
-                  className="flex items-center gap-2 p-3 rounded-xl bg-muted text-sm">
-                  <i className="fa-solid fa-user text-primary" /> Account
                 </Link>
                 <button
                   onClick={() => { localStorage.removeItem("darman_user"); setUser(null); setOpen(false); }}
@@ -283,6 +287,10 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
                 </button>
               </div>
             )}
+            <a href="#ai-features" onClick={() => setOpen(false)}
+              className="flex items-center gap-2 p-3 rounded-xl bg-gradient-cta text-primary-foreground text-sm font-semibold">
+              <i className="fa-solid fa-wand-magic-sparkles" /> AI Features
+            </a>
             <div className="grid grid-cols-2 gap-2 pt-2">
               {categories.slice(0, 8).map(c => (
                 <a key={c.name} href="#products" className="flex items-center gap-2 p-3 rounded-xl bg-muted text-sm">
