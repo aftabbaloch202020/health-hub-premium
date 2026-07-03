@@ -117,7 +117,7 @@ function AdminPage() {
 
   const paymentsQ = useQuery({
     queryKey: ["admin-payments", payFilter],
-    queryFn: () => payListFn({ data: { status: payFilter === "all" ? undefined : payFilter } }),
+    queryFn: () => payListFn(),
     enabled: tab === "payments" && !needsClaim,
   });
   const statsQ = useQuery({
@@ -136,7 +136,7 @@ function AdminPage() {
     onError: (e) => toast.error((e as Error).message),
   });
   const suspendMut = useMutation({
-    mutationFn: (uid: string) => subSuspendFn({ data: { user_id: uid } }),
+    mutationFn: (sub_id: string) => subSuspendFn({ data: { sub_id, action: "suspend" } }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-payments"] }); toast.success("Subscription suspended"); },
     onError: (e) => toast.error((e as Error).message),
   });
