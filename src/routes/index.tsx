@@ -18,6 +18,7 @@ import Newsletter from "@/components/medicare/Newsletter";
 import Contact from "@/components/medicare/Contact";
 import Footer from "@/components/medicare/Footer";
 import CartDrawer from "@/components/medicare/CartDrawer";
+import AiGate from "@/components/medicare/AiGate";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -42,12 +43,14 @@ function Index() {
         <Categories />
         <Deals />
         <LiveMedicineGrid />
-        <PrescriptionCTA />
-        <MedicalReportAI />
-        <SkinAnalysis />
-        <VoiceCallAssistant />
-        <HealthDashboard />
-        <MedicineReminder />
+        <div id="ai-features">
+          <AiGate tool="prescription"><PrescriptionCTA /></AiGate>
+          <AiGate tool="report"><MedicalReportAI /></AiGate>
+          <AiGate tool="skin"><SkinAnalysis /></AiGate>
+          <AiGate tool="voice"><VoiceCallAssistant /></AiGate>
+          <AiGate tool="health"><HealthDashboard /></AiGate>
+          <MedicineReminder />
+        </div>
         <Testimonials />
         <FAQ />
         <Contact />
