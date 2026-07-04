@@ -25,7 +25,7 @@ export default function AiLoginModal({ open, onClose }: { open: boolean; onClose
           <Link to="/auth" onClick={onClose} className="px-4 py-3 rounded-xl bg-gradient-cta text-primary-foreground font-semibold shadow-glow">
             <i className="fa-solid fa-right-to-bracket mr-2" />Log in
           </Link>
-          <Link to="/auth" onClick={onClose} search={{ mode: "signup" } as never} className="px-4 py-3 rounded-xl bg-muted font-semibold hover:bg-muted/70">
+          <Link to="/auth" onClick={onClose} className="px-4 py-3 rounded-xl bg-muted font-semibold hover:bg-muted/70">
             <i className="fa-solid fa-user-plus mr-2" />Register
           </Link>
         </div>
