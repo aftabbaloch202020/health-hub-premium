@@ -52,9 +52,16 @@ export default function AiGate({ tool, title, children }: { tool: AiTool; title?
     return <div className="container mx-auto px-4 py-12 text-center text-muted-foreground"><i className="fa-solid fa-spinner animate-spin mr-2" />Checking access…</div>;
   }
 
-  const canUse = access.isAdmin || access.hasActiveSub || !access.freeTrialUsed || unlocked;
-
+  const canUse = access.isAdmin || access.hasActiveSub || unlocked;
   if (canUse) return <>{children}</>;
+
+  if (!access.freeTrialUsed) {
+    return <LockedShell title={title ?? TOOL_LABELS[tool]} icon="fa-gift" heading="Start your 1 free AI use"
+      text="Every account gets 1 free AI feature usage. Click to unlock this tool now — after that you'll need a subscription."
+      cta={<button onClick={() => consume.mutate()} disabled={consume.isPending} className="cta-btn">
+        {consume.isPending ? <><i className="fa-solid fa-spinner animate-spin mr-2" />Unlocking…</> : <><i className="fa-solid fa-unlock mr-2" />Use my free trial</>}
+      </button>} preview={children} />;
+  }
 
   return <LockedShell title={title ?? TOOL_LABELS[tool]} icon="fa-crown" heading="Your free trial has ended"
     text="Please choose a subscription plan to continue using AI features."
