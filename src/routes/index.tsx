@@ -6,19 +6,13 @@ import FeatureBar from "@/components/medicare/FeatureBar";
 import Categories from "@/components/medicare/Categories";
 import LiveMedicineGrid from "@/components/medicare/LiveMedicineGrid";
 import Deals from "@/components/medicare/Deals";
-import PrescriptionCTA from "@/components/medicare/PrescriptionCTA";
-import MedicalReportAI from "@/components/medicare/MedicalReportAI";
-import VoiceCallAssistant from "@/components/medicare/VoiceCallAssistant";
-import HealthDashboard from "@/components/medicare/HealthDashboard";
-import SkinAnalysis from "@/components/medicare/SkinAnalysis";
-import MedicineReminder from "@/components/medicare/MedicineReminder";
 import Testimonials from "@/components/medicare/Testimonials";
 import FAQ from "@/components/medicare/FAQ";
 import Newsletter from "@/components/medicare/Newsletter";
 import Contact from "@/components/medicare/Contact";
 import Footer from "@/components/medicare/Footer";
 import CartDrawer from "@/components/medicare/CartDrawer";
-import AiGate from "@/components/medicare/AiGate";
+import AiFeaturesTeaser from "@/components/medicare/AiFeaturesTeaser";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -43,14 +37,7 @@ function Index() {
         <Categories />
         <Deals />
         <LiveMedicineGrid />
-        <div id="ai-features">
-          <AiGate tool="prescription"><PrescriptionCTA /></AiGate>
-          <AiGate tool="report"><MedicalReportAI /></AiGate>
-          <AiGate tool="skin"><SkinAnalysis /></AiGate>
-          <AiGate tool="voice"><VoiceCallAssistant /></AiGate>
-          <AiGate tool="health"><HealthDashboard /></AiGate>
-          <MedicineReminder />
-        </div>
+        <AiFeaturesTeaser />
         <Testimonials />
         <FAQ />
         <Contact />

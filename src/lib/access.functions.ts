@@ -12,6 +12,8 @@ export type AccessInfo = {
   subExpiresAt: string | null;
   subPlan: string | null;
   usageByTool: Record<string, number>;
+  totalUsage: number;
+  freeTrialUsed: boolean;
 };
 
 export const getAccessInfo = createServerFn({ method: "GET" })
@@ -25,6 +27,7 @@ export const getAccessInfo = createServerFn({ method: "GET" })
     ]);
     const usageByTool: Record<string, number> = {};
     (usage ?? []).forEach((r: { tool: string }) => { usageByTool[r.tool] = (usageByTool[r.tool] ?? 0) + 1; });
+    const totalUsage = (usage ?? []).length;
     return {
       loggedIn: true,
       isAdmin: !!adminRow,
@@ -32,6 +35,8 @@ export const getAccessInfo = createServerFn({ method: "GET" })
       subExpiresAt: sub?.expires_at ?? null,
       subPlan: sub?.plan ?? null,
       usageByTool,
+      totalUsage,
+      freeTrialUsed: totalUsage >= 1,
     };
   });
 
@@ -49,10 +54,10 @@ export const consumeAiUsage = createServerFn({ method: "POST" })
       await supabase.from("ai_usage").insert({ user_id: userId, tool: data.tool, was_free: false });
       return { ok: true, wasFree: false };
     }
-    // free trial: 1 per tool
-    const { count } = await supabase.from("ai_usage").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("tool", data.tool);
+    // free trial: 1 total use per user across all AI tools
+    const { count } = await supabase.from("ai_usage").select("id", { count: "exact", head: true }).eq("user_id", userId);
     if ((count ?? 0) >= 1) {
-      throw new Error("Your free trial for this tool is used. Please subscribe to continue.");
+      throw new Error("Your free trial has ended. Please subscribe to continue using AI features.");
     }
     await supabase.from("ai_usage").insert({ user_id: userId, tool: data.tool, was_free: true });
     return { ok: true, wasFree: true };

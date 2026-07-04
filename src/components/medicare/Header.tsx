@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { BRAND, categories, products } from "@/data/products";
 import { useCart, useWishlist } from "@/lib/cart";
 import LoginModal, { getStoredUser } from "./LoginModal";
+import AiLoginModal from "./AiLoginModal";
+import { supabase } from "@/integrations/supabase/client";
 export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
+  const navigate = useNavigate();
   const { count } = useCart();
   const { ids } = useWishlist();
   const [q, setQ] = useState("");
@@ -21,10 +24,23 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
   const [authOpen, setAuthOpen] = useState(false);
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
   const [userMenu, setUserMenu] = useState(false);
+  const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
 
   useEffect(() => {
     setUser(getStoredUser());
   }, []);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setHasSession(!!data.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setHasSession(!!s));
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  const goAiFeatures = () => {
+    if (hasSession) navigate({ to: "/ai-features" });
+    else setAiModalOpen(true);
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -73,6 +89,7 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
   return (
     <>
     <LoginModal open={authOpen} onClose={() => setAuthOpen(false)} onAuth={setUser} />
+    <AiLoginModal open={aiModalOpen} onClose={() => setAiModalOpen(false)} />
     <header className={`sticky top-0 z-50 transition-smooth ${scrolled ? "glass shadow-soft" : "bg-background"}`}>
       {/* Topbar */}
       <div className="hidden md:block bg-gradient-cta text-primary-foreground text-xs">
@@ -231,9 +248,9 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
               {c.name}
             </a>
           ))}
-          <a href="#ai-features" className="px-4 py-3 text-sm font-semibold text-primary whitespace-nowrap">
+          <button onClick={goAiFeatures} className="px-4 py-3 text-sm font-semibold text-primary whitespace-nowrap">
             <i className="fa-solid fa-wand-magic-sparkles mr-1" /> AI Features
-          </a>
+          </button>
           <a href="#deals" className="ml-auto px-4 py-3 text-sm font-semibold text-destructive whitespace-nowrap">
             <i className="fa-solid fa-fire mr-1" /> Hot Deals
           </a>
@@ -287,10 +304,10 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
                 </button>
               </div>
             )}
-            <a href="#ai-features" onClick={() => setOpen(false)}
-              className="flex items-center gap-2 p-3 rounded-xl bg-gradient-cta text-primary-foreground text-sm font-semibold">
+            <button onClick={() => { setOpen(false); goAiFeatures(); }}
+              className="w-full flex items-center gap-2 p-3 rounded-xl bg-gradient-cta text-primary-foreground text-sm font-semibold">
               <i className="fa-solid fa-wand-magic-sparkles" /> AI Features
-            </a>
+            </button>
             <div className="grid grid-cols-2 gap-2 pt-2">
               {categories.slice(0, 8).map(c => (
                 <a key={c.name} href="#products" className="flex items-center gap-2 p-3 rounded-xl bg-muted text-sm">
