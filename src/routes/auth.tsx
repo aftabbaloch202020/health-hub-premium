@@ -1,15 +1,18 @@
 import { useState, useEffect } from "react";
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch, Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Sign in — Darman STORE" }] }),
+  validateSearch: (s: Record<string, unknown>) => ({ redirect: typeof s.redirect === "string" ? s.redirect : undefined }),
   component: AuthPage,
 });
 
 function AuthPage() {
   const navigate = useNavigate();
+  const search = useSearch({ from: "/auth" }) as { redirect?: string };
+  const redirectTo = (search.redirect && search.redirect.startsWith("/")) ? search.redirect : "/dashboard";
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,9 +23,9 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: "/dashboard" });
+      if (data.user) navigate({ to: redirectTo });
     });
-  }, [navigate]);
+  }, [navigate, redirectTo]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,17 +37,19 @@ function AuthPage() {
         const { error } = await supabase.auth.signUp({
           email, password,
           options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
+            emailRedirectTo: `${window.location.origin}${redirectTo}`,
             data: { full_name: fullName, phone },
           },
         });
         if (error) throw error;
-        toast.success("Account created. You can sign in now.");
+        toast.success("Account created. Please sign in to continue.");
         setMode("signin");
+        setPassword("");
+        setConfirmPassword("");
       } else if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate({ to: "/dashboard" });
+        navigate({ to: redirectTo });
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/reset-password`,

@@ -3,9 +3,9 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
 export const PLAN_INFO = {
-  weekly:  { pkr: 199, days: 7 },
-  monthly: { pkr: 299, days: 30 },
-  yearly:  { pkr: 599, days: 365 },
+  weekly:  { pkr: 99,  days: 7 },
+  monthly: { pkr: 199, days: 30 },
+  yearly:  { pkr: 399, days: 365 },
 } as const;
 
 const PlanSchema = z.enum(["weekly", "monthly", "yearly"]);

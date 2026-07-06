@@ -12,7 +12,6 @@ import Newsletter from "@/components/medicare/Newsletter";
 import Contact from "@/components/medicare/Contact";
 import Footer from "@/components/medicare/Footer";
 import CartDrawer from "@/components/medicare/CartDrawer";
-import AiFeaturesTeaser from "@/components/medicare/AiFeaturesTeaser";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -37,7 +36,6 @@ function Index() {
         <Categories />
         <Deals />
         <LiveMedicineGrid />
-        <AiFeaturesTeaser />
         <Testimonials />
         <FAQ />
         <Contact />
