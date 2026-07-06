@@ -175,6 +175,19 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
         </div>
 
         <div className="flex items-center gap-1 ml-auto">
+          <button
+            onClick={goAiFeatures}
+            className="hidden sm:inline-flex items-center gap-2 px-4 h-10 rounded-full bg-gradient-cta text-primary-foreground font-semibold text-sm shadow-glow hover:scale-[1.02] transition-smooth"
+          >
+            <i className="fa-solid fa-wand-magic-sparkles" /> AI Features
+          </button>
+          <button
+            onClick={goAiFeatures}
+            aria-label="AI Features"
+            className="sm:hidden w-10 h-10 rounded-full bg-gradient-cta text-primary-foreground grid place-items-center shadow-glow"
+          >
+            <i className="fa-solid fa-wand-magic-sparkles" />
+          </button>
           <button onClick={() => setDark(!dark)} className="w-10 h-10 rounded-full hover:bg-muted grid place-items-center" aria-label="Toggle theme">
             <i className={`fa-solid ${dark ? "fa-sun" : "fa-moon"}`} />
           </button>
