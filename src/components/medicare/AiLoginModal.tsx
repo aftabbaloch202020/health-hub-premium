@@ -22,10 +22,10 @@ export default function AiLoginModal({ open, onClose }: { open: boolean; onClose
         <h3 className="text-2xl font-extrabold mb-2">AI Features are protected</h3>
         <p className="text-sm text-muted-foreground mb-6">Please log in or create an account to access AI features.</p>
         <div className="grid grid-cols-2 gap-3">
-          <Link to="/auth" onClick={onClose} className="px-4 py-3 rounded-xl bg-gradient-cta text-primary-foreground font-semibold shadow-glow">
+          <Link to="/auth" search={{ redirect: "/ai-features" }} onClick={onClose} className="px-4 py-3 rounded-xl bg-gradient-cta text-primary-foreground font-semibold shadow-glow">
             <i className="fa-solid fa-right-to-bracket mr-2" />Log in
           </Link>
-          <Link to="/auth" onClick={onClose} className="px-4 py-3 rounded-xl bg-muted font-semibold hover:bg-muted/70">
+          <Link to="/auth" search={{ redirect: "/ai-features" }} onClick={onClose} className="px-4 py-3 rounded-xl bg-muted font-semibold hover:bg-muted/70">
             <i className="fa-solid fa-user-plus mr-2" />Register
           </Link>
         </div>
