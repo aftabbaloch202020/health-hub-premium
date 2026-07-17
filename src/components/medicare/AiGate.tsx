@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,9 +26,9 @@ function useSession() {
 export default function AiGate({ tool, title, children }: { tool: AiTool; title?: string; children: React.ReactNode }) {
   const session = useSession();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const accessFn = useServerFn(getAccessInfo);
   const consumeFn = useServerFn(consumeAiUsage);
-  const [unlocked, setUnlocked] = useState(false);
 
   const { data: access, isLoading } = useQuery({
     queryKey: ["ai-access", session?.user?.id ?? "anon"],
@@ -39,7 +38,17 @@ export default function AiGate({ tool, title, children }: { tool: AiTool; title?
 
   const consume = useMutation({
     mutationFn: () => consumeFn({ data: { tool } }),
-    onSuccess: () => { setUnlocked(true); qc.invalidateQueries({ queryKey: ["ai-access"] }); toast.success("Unlocked — enjoy your AI session"); },
+    onSuccess: () => {
+      qc.setQueriesData({ queryKey: ["ai-access"] }, (old: AccessInfo | undefined) => old ? {
+        ...old,
+        totalUsage: Math.max(old.totalUsage + 1, 1),
+        freeTrialUsed: true,
+        usageByTool: { ...old.usageByTool, [tool]: (old.usageByTool[tool] ?? 0) + 1 },
+      } : old);
+      qc.invalidateQueries({ queryKey: ["ai-access"] });
+      toast.success("Free AI use completed. Choose a plan to continue.");
+      navigate({ to: "/subscribe" });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -53,7 +62,7 @@ export default function AiGate({ tool, title, children }: { tool: AiTool; title?
     return <div className="container mx-auto px-4 py-12 text-center text-muted-foreground"><i className="fa-solid fa-spinner animate-spin mr-2" />Checking access…</div>;
   }
 
-  const canUse = access.isAdmin || access.hasActiveSub || unlocked;
+  const canUse = access.isAdmin || access.hasActiveSub;
   if (canUse) return <>{children}</>;
 
   if (!access.freeTrialUsed) {
