@@ -45,7 +45,7 @@ export default function AiGate({ tool, title, children }: { tool: AiTool; title?
   // Not logged in
   if (!session) {
     return <LockedShell title={title ?? TOOL_LABELS[tool]} icon="fa-lock" heading="Sign in required" text="Create a free account to try any AI tool. Every new user gets 1 free use per tool."
-      cta={<Link to="/auth" className="cta-btn">Sign in / Register</Link>} preview={children} />;
+      cta={<Link to="/auth" search={{ redirect: "/ai-features" }} className="cta-btn">Sign in / Register</Link>} preview={children} />;
   }
 
   if (isLoading || !access) {
