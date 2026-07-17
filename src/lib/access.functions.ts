@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
-export const AI_TOOLS = ["prescription", "report", "skin", "voice", "health", "chat"] as const;
+export const AI_TOOLS = ["prescription", "report", "skin", "voice", "health", "reminder", "chat"] as const;
 export type AiTool = typeof AI_TOOLS[number];
 
 export type AccessInfo = {

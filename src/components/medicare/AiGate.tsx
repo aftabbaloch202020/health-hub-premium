@@ -12,6 +12,7 @@ export const TOOL_LABELS: Record<AiTool, string> = {
   skin: "AI Skin Analysis",
   voice: "AI Voice Assistant",
   health: "AI Health Dashboard",
+  reminder: "AI Medicine Reminder",
   chat: "AI Pharmacist Chat",
 };
 
@@ -44,7 +45,7 @@ export default function AiGate({ tool, title, children }: { tool: AiTool; title?
 
   // Not logged in
   if (!session) {
-    return <LockedShell title={title ?? TOOL_LABELS[tool]} icon="fa-lock" heading="Sign in required" text="Create a free account to try any AI tool. Every new user gets 1 free use per tool."
+    return <LockedShell title={title ?? TOOL_LABELS[tool]} icon="fa-lock" heading="Sign in required" text="Create a free account to try any AI tool. Every new user gets exactly 1 free AI use."
       cta={<Link to="/auth" search={{ redirect: "/ai-features" }} className="cta-btn">Sign in / Register</Link>} preview={children} />;
   }
 

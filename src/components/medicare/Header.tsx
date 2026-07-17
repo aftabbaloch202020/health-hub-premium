@@ -3,7 +3,6 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { BRAND, categories, products } from "@/data/products";
 import { useCart, useWishlist } from "@/lib/cart";
-import AiLoginModal from "./AiLoginModal";
 import { supabase } from "@/integrations/supabase/client";
 export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
   const navigate = useNavigate();
@@ -19,7 +18,6 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
   const [scrolled, setScrolled] = useState(false);
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
   const [userMenu, setUserMenu] = useState(false);
-  const [aiModalOpen, setAiModalOpen] = useState(false);
   const [hasSession, setHasSession] = useState(false);
 
   useEffect(() => {
@@ -49,7 +47,7 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
 
   const goAiFeatures = () => {
     if (hasSession) navigate({ to: "/ai-features" });
-    else setAiModalOpen(true);
+    else navigate({ to: "/auth", search: { redirect: "/ai-features" } });
   };
 
   const signOut = async () => {
@@ -108,7 +106,6 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
 
   return (
     <>
-    <AiLoginModal open={aiModalOpen} onClose={() => setAiModalOpen(false)} />
     <header className={`sticky top-0 z-50 transition-smooth ${scrolled ? "glass shadow-soft" : "bg-background"}`}>
       {/* Topbar */}
       <div className="hidden md:block bg-gradient-cta text-primary-foreground text-xs">
