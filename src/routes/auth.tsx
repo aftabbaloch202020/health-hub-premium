@@ -27,6 +27,17 @@ function AuthPage() {
     });
   }, [navigate, redirectTo]);
 
+  const ensureProfile = async (userId: string, userEmail: string | null) => {
+    const { error } = await supabase.from("profiles").upsert({
+      id: userId,
+      email: userEmail ?? email,
+      full_name: fullName.trim() || undefined,
+      phone: phone.trim() || undefined,
+      updated_at: new Date().toISOString(),
+    });
+    if (error) throw error;
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -34,7 +45,7 @@ function AuthPage() {
       if (mode === "signup") {
         if (password.length < 6) throw new Error("Password must be at least 6 characters");
         if (password !== confirmPassword) throw new Error("Passwords do not match");
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email, password,
           options: {
             emailRedirectTo: `${window.location.origin}${redirectTo}`,
@@ -42,13 +53,18 @@ function AuthPage() {
           },
         });
         if (error) throw error;
+        if (data.user && data.session) {
+          await ensureProfile(data.user.id, data.user.email ?? email);
+          await supabase.auth.signOut();
+        }
         toast.success("Account created. Please sign in to continue.");
         setMode("signin");
         setPassword("");
         setConfirmPassword("");
       } else if (mode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        if (data.user) await ensureProfile(data.user.id, data.user.email ?? email);
         navigate({ to: redirectTo });
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {

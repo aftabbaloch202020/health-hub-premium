@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { BRAND, categories, products } from "@/data/products";
 import { useCart, useWishlist } from "@/lib/cart";
-import LoginModal, { getStoredUser } from "./LoginModal";
-import AiLoginModal from "./AiLoginModal";
 import { supabase } from "@/integrations/supabase/client";
 export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { count } = useCart();
   const { ids } = useWishlist();
   const [q, setQ] = useState("");
@@ -14,32 +14,50 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
   const [listening, setListening] = useState(false);
   const [voiceLang, setVoiceLang] = useState<"en-US" | "ur-PK">("en-US");
   const recogRef = useRef<any>(null);
-  const [dark, setDark] = useState(() => {
-    if (typeof window === "undefined") return false;
-    const saved = localStorage.getItem("theme");
-    if (saved) return saved === "dark";
-    return window.matchMedia("(prefers-color-scheme: dark)").matches;
-  });
+  const [dark, setDark] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [authOpen, setAuthOpen] = useState(false);
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
   const [userMenu, setUserMenu] = useState(false);
-  const [aiModalOpen, setAiModalOpen] = useState(false);
   const [hasSession, setHasSession] = useState(false);
 
   useEffect(() => {
-    setUser(getStoredUser());
+    supabase.auth.getSession().then(({ data }) => {
+      setHasSession(!!data.session);
+      const authUser = data.session?.user;
+      setUser(authUser ? {
+        name: String(authUser.user_metadata?.full_name || authUser.email?.split("@")[0] || "User"),
+        email: authUser.email || "",
+      } : null);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+      setHasSession(!!s);
+      const authUser = s?.user;
+      setUser(authUser ? {
+        name: String(authUser.user_metadata?.full_name || authUser.email?.split("@")[0] || "User"),
+        email: authUser.email || "",
+      } : null);
+    });
+    return () => sub.subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setHasSession(!!data.session));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setHasSession(!!s));
-    return () => sub.subscription.unsubscribe();
+    const saved = localStorage.getItem("theme");
+    setDark(saved ? saved === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches);
   }, []);
 
   const goAiFeatures = () => {
     if (hasSession) navigate({ to: "/ai-features" });
-    else setAiModalOpen(true);
+    else navigate({ to: "/auth", search: { redirect: "/ai-features" } });
+  };
+
+  const signOut = async () => {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    setUser(null);
+    setHasSession(false);
+    setUserMenu(false);
+    navigate({ to: "/auth", replace: true });
   };
 
   useEffect(() => {
@@ -88,8 +106,6 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
 
   return (
     <>
-    <LoginModal open={authOpen} onClose={() => setAuthOpen(false)} onAuth={setUser} />
-    <AiLoginModal open={aiModalOpen} onClose={() => setAiModalOpen(false)} />
     <header className={`sticky top-0 z-50 transition-smooth ${scrolled ? "glass shadow-soft" : "bg-background"}`}>
       {/* Topbar */}
       <div className="hidden md:block bg-gradient-cta text-primary-foreground text-xs">
@@ -193,7 +209,7 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
           </button>
           <div className="hidden sm:block relative">
             <button
-              onClick={() => (user ? setUserMenu(v => !v) : setAuthOpen(true))}
+              onClick={() => (user ? setUserMenu(v => !v) : navigate({ to: "/auth" }))}
               className="w-10 h-10 rounded-full hover:bg-muted grid place-items-center"
               aria-label="Account"
             >
@@ -228,7 +244,7 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
                   <i className="fa-solid fa-right-to-bracket" />Account / Sign in
                 </Link>
                 <button
-                  onClick={() => { localStorage.removeItem("darman_user"); setUser(null); setUserMenu(false); }}
+                  onClick={signOut}
                   className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted flex items-center gap-2"
                 >
                   <i className="fa-solid fa-arrow-right-from-bracket" />Sign out
@@ -288,7 +304,7 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
                 </>
               ) : (
                 <button
-                  onClick={() => { setAuthOpen(true); setOpen(false); }}
+                  onClick={() => { setOpen(false); navigate({ to: "/auth" }); }}
                   className="w-full rounded-xl bg-gradient-cta text-primary-foreground font-medium text-sm px-4 py-3 flex items-center justify-center gap-2"
                 >
                   <i className="fa-solid fa-right-to-bracket" /> Sign in / Register
@@ -310,7 +326,7 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
                   <i className="fa-solid fa-bag-shopping text-primary" /> My Orders
                 </Link>
                 <button
-                  onClick={() => { localStorage.removeItem("darman_user"); setUser(null); setOpen(false); }}
+                  onClick={async () => { setOpen(false); await signOut(); }}
                   className="flex items-center gap-2 p-3 rounded-xl bg-muted text-sm text-left"
                 >
                   <i className="fa-solid fa-arrow-right-from-bracket text-primary" /> Sign out

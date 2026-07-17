@@ -16,14 +16,16 @@ const DEAL = {
 };
 
 const DURATION = 44 * 60 * 60 * 1000; // 44 hours
+const INITIAL_TARGET = 44 * 60 * 60 * 1000;
 
 function useCountdown(target: number) {
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState(0);
   useEffect(() => {
+    setNow(Date.now());
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
-  const diff = Math.max(0, target - now);
+  const diff = Math.max(0, now ? target - now : INITIAL_TARGET);
   const expired = diff === 0;
   const d = Math.floor(diff / 86_400_000);
   const h = Math.floor((diff % 86_400_000) / 3_600_000);
@@ -33,7 +35,8 @@ function useCountdown(target: number) {
 }
 
 export default function Deals() {
-  const targetRef = useRef(Date.now() + DURATION);
+  const targetRef = useRef(0);
+  if (!targetRef.current && typeof window !== "undefined") targetRef.current = Date.now() + DURATION;
   const { d, h, m, s, expired } = useCountdown(targetRef.current);
   const { add, count } = useCart();
 

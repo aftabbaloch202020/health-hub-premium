@@ -9,6 +9,7 @@ import SkinAnalysis from "@/components/medicare/SkinAnalysis";
 import VoiceCallAssistant from "@/components/medicare/VoiceCallAssistant";
 import HealthDashboard from "@/components/medicare/HealthDashboard";
 import MedicineReminder from "@/components/medicare/MedicineReminder";
+import PharmacistChat from "@/components/medicare/PharmacistChat";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -56,7 +57,8 @@ function AiFeaturesPage() {
         <AiGate tool="skin"><SkinAnalysis /></AiGate>
         <AiGate tool="voice"><VoiceCallAssistant /></AiGate>
         <AiGate tool="health"><HealthDashboard /></AiGate>
-        <MedicineReminder />
+        <AiGate tool="reminder"><MedicineReminder /></AiGate>
+        <AiGate tool="chat"><PharmacistChat /></AiGate>
       </main>
       <Footer />
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
