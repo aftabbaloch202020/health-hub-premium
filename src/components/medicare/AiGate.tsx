@@ -2,7 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { getAccessInfo, consumeAiUsage, type AiTool } from "@/lib/access.functions";
+import { getAccessInfo, consumeAiUsage, type AccessInfo, type AiTool } from "@/lib/access.functions";
 import { toast } from "sonner";
 
 export const TOOL_LABELS: Record<AiTool, string> = {
