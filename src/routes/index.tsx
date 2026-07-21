@@ -4,7 +4,6 @@ import Header from "@/components/medicare/Header";
 import Hero from "@/components/medicare/Hero";
 import FeatureBar from "@/components/medicare/FeatureBar";
 import Categories from "@/components/medicare/Categories";
-import LiveMedicineGrid from "@/components/medicare/LiveMedicineGrid";
 import Deals from "@/components/medicare/Deals";
 import Testimonials from "@/components/medicare/Testimonials";
 import FAQ from "@/components/medicare/FAQ";
@@ -36,7 +35,6 @@ function Index() {
         <FeatureBar />
         <Categories />
         <Deals />
-        <LiveMedicineGrid />
         <AiFeaturesShowcase />
         <Testimonials />
         <FAQ />
