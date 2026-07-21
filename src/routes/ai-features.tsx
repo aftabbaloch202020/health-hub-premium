@@ -15,7 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getAccessInfo } from "@/lib/access.functions";
 
-export const Route = createFileRoute("/_authenticated/ai-features")({
+export const Route = createFileRoute("/ai-features")({
   head: () => ({ meta: [
     { title: "AI Features — Darman STORE" },
     { name: "description", content: "Access all AI-powered health tools: prescription scanner, report analysis, skin AI, voice pharmacist and more." },
