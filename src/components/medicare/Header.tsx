@@ -46,8 +46,7 @@ export default function Header({ onCartOpen }: { onCartOpen: () => void }) {
   }, []);
 
   const goAiFeatures = () => {
-    if (hasSession) navigate({ to: "/ai-features" });
-    else navigate({ to: "/auth", search: { redirect: "/ai-features" } });
+    navigate({ to: "/ai-features" });
   };
 
   const signOut = async () => {
